@@ -84,6 +84,10 @@ final class BrandStylesheet
             $blocks[] = self::block('html[data-theme="dark"], html[data-theme="true-black"]', $dark);
         }
 
+        if (isset($tokens['primary'])) {
+            array_push($blocks, ...self::adminPrimaryBlocks($tokens['primary']));
+        }
+
         $foreground = $tokens['foreground'] ?? null;
         $background = $tokens['background'] ?? null;
 
@@ -92,9 +96,15 @@ final class BrandStylesheet
                 '--color-base-content' => $foreground,
                 '--color-base-200' => $background,
             ]);
-            // Upstream layouts paint the page background in an inline style; same selector, loaded later.
+            // Upstream's theme scripts (layout head and resources/js/app.js) write a hard-coded
+            // light background onto <html> and <body> as inline styles. Only !important in a
+            // stylesheet beats an inline style, without editing upstream's scripts.
             $blocks[] = self::block('html[data-theme="light"], html[data-theme="light"] body', [
-                'background-color' => $background,
+                'background-color' => $background.' !important',
+            ]);
+            // Admin panel: the top bar and the sidebar's logo strip are painted white by Filament.
+            $blocks[] = self::block('html[data-theme="light"] .fi-topbar-ctn, html[data-theme="light"] .fi-topbar, html[data-theme="light"] .fi-sidebar-header', [
+                'background-color' => $background.' !important',
             ]);
         }
 
@@ -123,6 +133,61 @@ final class BrandStylesheet
     public static function url(): string
     {
         return route('brand.stylesheet', ['v' => self::version()]);
+    }
+
+    /**
+     * Admin panel primary buttons and input focus borders. Upstream's admin theme partial
+     * forces these to amber with !important; these rules use the same !important with one
+     * more element in the selector, so they win without editing upstream's file.
+     *
+     * @return list<string>
+     */
+    private static function adminPrimaryBlocks(string $primary): array
+    {
+        $blocks = [];
+
+        foreach (['html' => $primary, 'html.dark' => self::readableOnDark($primary)] as $scope => $colour) {
+            $text = self::readableTextOn($colour);
+            $hover = self::shade($colour, $scope === 'html' ? -12 : 12);
+            $hoverText = self::readableTextOn($hover);
+
+            $blocks[] = self::block("{$scope} .fi-btn.fi-color-primary", [
+                'background-color' => $colour.' !important',
+                'border-color' => $colour.' !important',
+                'color' => $text.' !important',
+            ]);
+            $blocks[] = self::block("{$scope} .fi-btn.fi-color-primary :is(.fi-btn-label, .fi-btn-icon, svg)", [
+                'color' => $text.' !important',
+            ]);
+            $blocks[] = self::block("{$scope} .fi-btn.fi-color-primary:hover, {$scope} .fi-btn.fi-color-primary:focus-visible", [
+                'background-color' => $hover.' !important',
+                'border-color' => $hover.' !important',
+                'color' => $hoverText.' !important',
+            ]);
+            $blocks[] = self::block("{$scope} .fi-btn.fi-color-primary:hover :is(.fi-btn-label, .fi-btn-icon, svg), {$scope} .fi-btn.fi-color-primary:focus-visible :is(.fi-btn-label, .fi-btn-icon, svg)", [
+                'color' => $hoverText.' !important',
+            ]);
+        }
+
+        $focus = '.fi-input-wrp:not(.fi-disabled):not(:has(.fi-ac-action:focus)):focus-within';
+        $blocks[] = self::block("html[data-theme=\"light\"] {$focus}", ['border-color' => $primary.' !important']);
+        $blocks[] = self::block("html[data-theme].dark {$focus}", ['border-color' => self::readableOnDark($primary).' !important']);
+
+        return $blocks;
+    }
+
+    /**
+     * Mix with black (negative percent) or white (positive percent).
+     */
+    public static function shade(string $hex, int $percent): string
+    {
+        $target = $percent < 0 ? 0 : 255;
+        $amount = abs($percent) / 100;
+
+        return sprintf('#%02x%02x%02x', ...array_map(
+            fn (int $c): int => (int) round($c + ($target - $c) * $amount),
+            self::rgb($hex),
+        ));
     }
 
     /**
