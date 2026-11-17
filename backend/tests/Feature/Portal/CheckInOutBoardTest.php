@@ -149,8 +149,10 @@ class CheckInOutBoardTest extends TestCase
 
             Livewire::actingAs($user)
                 ->test(CheckInOutBoard::class)
-                ->assertSee('Eincheckbare Termine bis zu 12 Stunden im Voraus')
-                ->assertSee('1 Treffer')
+                ->assertSee(__('Eincheckbare Termine bis zu :window im Voraus und aktive Check-outs.', [
+                    'window' => trans_choice(':count Stunde|:count Stunden', 12, ['count' => 12]),
+                ]))
+                ->assertSee(trans_choice(':count Treffer|:count Treffer', 1, ['count' => 1]))
                 ->assertSee('Configured Visible Visit')
                 ->assertDontSee('Configured Outside Visit')
                 ->call('checkIn', $outsideVisit->id, $outsideVisitor->id);
