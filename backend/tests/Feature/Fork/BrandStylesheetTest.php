@@ -110,4 +110,28 @@ class BrandStylesheetTest extends TestCase
 
         $this->get('/login')->assertOk()->assertSee(BrandStylesheet::url(), false);
     }
+
+    public function test_admin_primary_buttons_and_focus_use_the_brand_primary(): void
+    {
+        app(SettingsRepository::class)->saveOrganisation(['organisation.colors.primary' => '#6cc4b8'], null);
+        $css = BrandStylesheet::css();
+
+        // Outranks upstream's amber `.fi-btn.fi-color-primary { … !important }` by one element.
+        $this->assertMatchesRegularExpression('/^html \.fi-btn\.fi-color-primary \{[^}]*background-color: #6cc4b8 !important;[^}]*color: #000000 !important;/m', $css);
+        $this->assertMatchesRegularExpression('/^html \.fi-btn\.fi-color-primary:hover, [^{]*\{[^}]*background-color: (#[0-9a-f]{6}) !important;/m', $css);
+        $this->assertStringContainsString('html.dark .fi-btn.fi-color-primary {', $css);
+        $this->assertMatchesRegularExpression('/html\[data-theme="light"\] \.fi-input-wrp[^{]*:focus-within \{\s*border-color: #6cc4b8 !important;/', $css);
+        $this->assertStringContainsString('html[data-theme].dark .fi-input-wrp', $css);
+        $this->assertSame('#5faca2', BrandStylesheet::shade('#6cc4b8', -12));
+    }
+
+    public function test_admin_top_bar_uses_the_brand_background_in_the_light_theme(): void
+    {
+        app(SettingsRepository::class)->saveOrganisation(['organisation.colors.foreground' => '#214196', 'organisation.colors.background' => '#e7e9e8'], null);
+
+        $this->assertMatchesRegularExpression(
+            '/html\[data-theme="light"\] \.fi-topbar-ctn, html\[data-theme="light"\] \.fi-topbar, html\[data-theme="light"\] \.fi-sidebar-header \{\s*background-color: #e7e9e8 !important;/',
+            BrandStylesheet::css(),
+        );
+    }
 }
