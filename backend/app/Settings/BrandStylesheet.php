@@ -92,9 +92,11 @@ final class BrandStylesheet
                 '--color-base-content' => $foreground,
                 '--color-base-200' => $background,
             ]);
-            // Upstream layouts paint the page background in an inline style; same selector, loaded later.
+            // Upstream's theme scripts (layout head and resources/js/app.js) write a hard-coded
+            // light background onto <html> and <body> as inline styles. Only !important in a
+            // stylesheet beats an inline style, without editing upstream's scripts.
             $blocks[] = self::block('html[data-theme="light"], html[data-theme="light"] body', [
-                'background-color' => $background,
+                'background-color' => $background.' !important',
             ]);
         }
 

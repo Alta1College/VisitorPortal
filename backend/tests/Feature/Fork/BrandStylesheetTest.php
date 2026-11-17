@@ -95,7 +95,8 @@ class BrandStylesheetTest extends TestCase
         $css = BrandStylesheet::css();
         $this->assertTrue(BrandStylesheet::surfaceColoursApply());
         $this->assertMatchesRegularExpression('/html\[data-theme="light"\] \{[^}]*--color-base-content: #222222;[^}]*--color-base-200: #fafaf5;/s', $css);
-        $this->assertStringContainsString('html[data-theme="light"] body', $css);
+        // !important: upstream's theme scripts set the page background as an inline style.
+        $this->assertMatchesRegularExpression('/html\[data-theme="light"\] body \{\s*background-color: #fafaf5 !important;/', $css);
 
         // Light grey text on white: unreadable, so neither colour is applied.
         $settings->saveOrganisation(['organisation.colors.foreground' => '#dddddd', 'organisation.colors.background' => '#ffffff'], null);
