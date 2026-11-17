@@ -11,11 +11,13 @@ use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Settings\SettingsServiceProvider;
+use App\VisitorWorkflow\VisitorWorkflowServiceProvider;
 
 return [
     // Fork providers (see docs/fork/upstream-patches.md). Settings must precede the admin panel.
     AuditServiceProvider::class,
     SettingsServiceProvider::class,
+    VisitorWorkflowServiceProvider::class,
     AppServiceProvider::class,
     FortifyServiceProvider::class,
     AdminPanelProvider::class,

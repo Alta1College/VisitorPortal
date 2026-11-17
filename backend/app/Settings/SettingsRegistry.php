@@ -114,6 +114,7 @@ final class SettingsRegistry
             new SettingDefinition('privacy.notification_retention_days', SettingDefinition::TYPE_INTEGER, self::GROUP_RETENTION, $days, required: true),
             new SettingDefinition('privacy.run_log_retention_days', SettingDefinition::TYPE_INTEGER, self::GROUP_RETENTION, $days, required: true),
             new SettingDefinition('organisation.audit_retention_days', SettingDefinition::TYPE_INTEGER, self::GROUP_RETENTION, ['integer', 'min:30', 'max:36500'], required: true),
+            new SettingDefinition('organisation.evidence_retention_days', SettingDefinition::TYPE_INTEGER, self::GROUP_RETENTION, $days, required: true),
         ];
 
         $keyed = [];

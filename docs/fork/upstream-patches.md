@@ -6,7 +6,8 @@ upstream merges can be reviewed quickly. New files added by the fork are not lis
 | File | Change | Reason | Phase | Offer upstream? |
 |---|---|---|---|---|
 | `backend/composer.lock` | Symfony components updated to patch releases | Security advisories (see assessment §2) | 1 | Superseded by upstream when it updates |
-| `backend/bootstrap/providers.php` | Register `AuditServiceProvider` and `SettingsServiceProvider` ahead of the upstream providers | Settings overlay must apply before the admin panel reads `config('branding.*')` | 2 | No |
+| `backend/bootstrap/providers.php` | Register `AuditServiceProvider`, `SettingsServiceProvider` (Phase 2) and `VisitorWorkflowServiceProvider` (Phase 3) ahead of the upstream providers | Settings overlay must apply before the admin panel reads `config('branding.*')` | 2, 3 | No |
+| `visit_visitor` table (migration, no file edit) | Additive nullable column `visitor_type_id` | Visitor type of each attendance | 3 | No |
 | `backend/app/Support/VisitorPortalPermissions.php` | Merge `ForkPermissions::ADMIN` into the admin role (one statement) | Admin role needs the settings and audit permissions | 2 | No |
 | `backend/app/Support/UserPreferences.php` | `browserLocale()` falls back to `config('app.locale')` instead of always `en` | Organisation default language | 2 | Yes |
 | `backend/app/Models/Site.php` | `Site::default()` timezone from `config('app.timezone')` | Remove hard-coded `Europe/Berlin` | 2 | Yes |

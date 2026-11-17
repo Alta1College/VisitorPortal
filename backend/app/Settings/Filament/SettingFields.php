@@ -63,6 +63,7 @@ final class SettingFields
             'privacy.notification_retention_days' => ['Aufbewahrung von Benachrichtigungen (Tage)'],
             'privacy.run_log_retention_days' => ['Aufbewahrung der Löschprotokolle (Tage)'],
             'organisation.audit_retention_days' => ['Aufbewahrung des Audit-Protokolls (Tage)', 'Mindestens 30 Tage.'],
+            'organisation.evidence_retention_days' => ['Aufbewahrung von Nachweisdateien (Tage)', 'Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.'],
         ];
     }
 
