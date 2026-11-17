@@ -172,7 +172,7 @@ class ReceptionAdministerVisitTest extends TestCase
                 ->assertDontSee(__('Offene Klärungen'));
 
             $this->assertMatchesRegularExpression(
-                '/Ausweise vorzubereiten.*?>1<.*?Nicht gedruckte Ausweise im Vorbereitungszeitraum/s',
+                '/'.preg_quote(__('Ausweise vorzubereiten'), '/').'.*?>1<.*?'.preg_quote(__('Nicht gedruckte Ausweise im Vorbereitungszeitraum'), '/').'/s',
                 $component->html()
             );
         } finally {
