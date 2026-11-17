@@ -57,6 +57,7 @@
 
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-brand-stylesheet />
     @if (config('visitorportal.easter_egg.enabled') && (! app()->environment('production') || config('visitorportal.easter_egg.show_in_production')))
         @vite('resources/js/easter-egg.ts')
     @endif

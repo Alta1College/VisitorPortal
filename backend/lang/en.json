@@ -808,5 +808,8 @@
     "ist nicht gleich": "does not equal",
     "mindestens eine Regel zutrifft": "at least one rule matches",
     "Aufbewahrung von Nachweisdateien (Tage)": "Keep evidence files for (days)",
-    "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Photos, signatures and uploaded evidence are deleted after this. The answers themselves are kept until the visit is deleted."
+    "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Photos, signatures and uploaded evidence are deleted after this. The answers themselves are kept until the visit is deleted.",
+    "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.": "For buttons, links and selection controls in the portal and admin area. Lightened in the dark theme where needed.",
+    "Textfarbe im hellen Design.": "Text colour in the light theme.",
+    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Page background in the light theme. Only applied when the foreground and background colours are readable together."
 }
