@@ -75,7 +75,7 @@ class NotificationTest extends TestCase
         $email = $messages[0];
 
         $this->assertEquals($user->email, $email->getOriginalMessage()->getTo()[0]->getAddress());
-        $this->assertEquals('Gast eingecheckt', $email->getOriginalMessage()->getSubject());
+        $this->assertEquals(__('Gast eingecheckt'), $email->getOriginalMessage()->getSubject());
         $this->assertStringContainsString(
             $visitor->first_name,
             $email->getOriginalMessage()->getBody()->bodyToString()
@@ -216,7 +216,7 @@ class NotificationTest extends TestCase
         $this->assertEquals($user->email, $email->getOriginalMessage()->getTo()[0]->getAddress());
 
         // Check the subject
-        $this->assertEquals('Heutige Besuche', $email->getOriginalMessage()->getSubject());
+        $this->assertEquals(__('Heutige Besuche'), $email->getOriginalMessage()->getSubject());
 
         // Check if the visitor's name is actually inside the rendered email body
         $this->assertStringContainsString(
@@ -279,7 +279,7 @@ class NotificationTest extends TestCase
 
         $this->assertEquals($user->email, $email->getOriginalMessage()->getTo()[0]->getAddress());
 
-        $this->assertEquals('Besuch erfolgreich erstellt', $email->getOriginalMessage()->getSubject());
+        $this->assertEquals(__('Besuch erfolgreich erstellt'), $email->getOriginalMessage()->getSubject());
 
         $this->assertStringContainsString(
             Carbon::parse($visit->scheduled_until)->format('H:i'),
@@ -304,7 +304,7 @@ class NotificationTest extends TestCase
 
         $this->assertEquals($visitor->email, $email->getOriginalMessage()->getTo()[0]->getAddress());
 
-        $this->assertEquals('Ihr Besuch wurde registriert', $email->getOriginalMessage()->getSubject());
+        $this->assertEquals(__('Ihr Besuch wurde registriert'), $email->getOriginalMessage()->getSubject());
 
         $this->assertStringContainsString(
             Carbon::parse($visit->scheduled_until)->format('H:i'),
@@ -330,8 +330,8 @@ class NotificationTest extends TestCase
 
         $body = $messages[0]->getOriginalMessage()->getBody()->bodyToString();
 
-        $this->assertEquals('Erinnerung an Ihren Besuch', $messages[0]->getOriginalMessage()->getSubject());
-        $this->assertStringContainsString('Erinnerung an Ihren Besuch', $body);
+        $this->assertEquals(__('Erinnerung an Ihren Besuch'), $messages[0]->getOriginalMessage()->getSubject());
+        $this->assertStringContainsString(__('Erinnerung an Ihren Besuch'), $body);
         $this->assertStringContainsString('https://example.org/privacy', $body);
         $this->assertStringNotContainsString('Introduction', $body);
         $this->assertStringNotContainsString('Button Text', $body);
