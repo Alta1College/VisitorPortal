@@ -19,7 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 class VisitActionService
 {
-    public function checkInParticipant(Visit $visit, Visitor $visitor, User $actionBy): Visitor
+    /**
+     * @param  User|null  $actionBy  null when the visitor checks in themselves (fork: public channel)
+     */
+    public function checkInParticipant(Visit $visit, Visitor $visitor, ?User $actionBy): Visitor
     {
         $this->ensureVisitCanBeOperated($visit);
 
@@ -30,7 +33,7 @@ class VisitActionService
         if (blank($pivot->checked_in_at) || filled($pivot->checked_out_at)) {
             $payload = [
                 'checked_in_at' => now(),
-                'checked_in_by_user_id' => $actionBy->id,
+                'checked_in_by_user_id' => $actionBy?->id,
                 'updated_at' => now(),
             ];
 
@@ -52,7 +55,10 @@ class VisitActionService
         return $participant;
     }
 
-    public function checkOutParticipant(Visit $visit, Visitor $visitor, User $actionBy): Visitor
+    /**
+     * @param  User|null  $actionBy  null when the visitor signs out themselves (fork: public channel)
+     */
+    public function checkOutParticipant(Visit $visit, Visitor $visitor, ?User $actionBy): Visitor
     {
         $this->ensureVisitCanBeOperated($visit);
 
@@ -61,7 +67,7 @@ class VisitActionService
         if (filled($participant->pivot->checked_in_at) && blank($participant->pivot->checked_out_at)) {
             $visit->visitors()->updateExistingPivot($visitor->id, [
                 'checked_out_at' => now(),
-                'checked_out_by_user_id' => $actionBy->id,
+                'checked_out_by_user_id' => $actionBy?->id,
                 'updated_at' => now(),
             ]);
         }

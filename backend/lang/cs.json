@@ -809,5 +809,14 @@
     "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Fotografie, podpisy a nahrané doklady se poté smažou. Samotné odpovědi zůstávají až do smazání návštěvy.",
     "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.": "Pro tlačítka, odkazy a výběrové prvky v portálu i administraci. V tmavém motivu se v případě potřeby zesvětlí.",
     "Textfarbe im hellen Design.": "Barva textu ve světlém motivu.",
-    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Pozadí stránek ve světlém motivu. Použije se jen tehdy, když je text v barvě popředí na pozadí dobře čitelný."
+    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Pozadí stránek ve světlém motivu. Použije se jen tehdy, když je text v barvě popředí na pozadí dobře čitelný.",
+    "Bitte wählen Sie Ihre Ansprechperson erneut aus.": "Vyberte prosím znovu osobu, kterou navštěvujete.",
+    "Bitte wählen Sie aus, wen Sie besuchen.": "Vyberte prosím, koho navštěvujete.",
+    "Die Anfrage ist ungültig. Bitte erneut versuchen.": "Požadavek není platný. Zkuste to prosím znovu.",
+    "Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.": "Přihlášení zde teď není možné. Obraťte se prosím na recepci.",
+    "Dieser Abmeldelink ist nicht mehr gültig. Bitte melden Sie sich am Empfang ab.": "Tento odkaz pro odhlášení již neplatí. Odhlaste se prosím na recepci.",
+    "Dieser Besuchertyp ist hier nicht verfügbar.": "Tento typ návštěvníka zde není k dispozici.",
+    "Empfangskontakt": "Kontakt recepce",
+    "Selbst angemeldet (:channel).": "Samoobslužně přihlášen (:channel).",
+    "Wird als Gastgeber eingetragen, wenn ein Besuchertyp keinen Gastgeber braucht oder der Besucher keinen auswählt, z. B. bei Lieferungen.": "Zapíše se jako hostitel, pokud typ návštěvníka hostitele nepotřebuje nebo ho návštěvník nevybere, např. u doručení."
 }

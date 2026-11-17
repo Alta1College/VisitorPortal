@@ -809,5 +809,14 @@
     "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Les photos, signatures et justificatifs téléversés sont ensuite supprimés. Les réponses elles-mêmes sont conservées jusqu’à la suppression de la visite.",
     "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.": "Pour les boutons, liens et contrôles de sélection du portail et de l’administration. Éclaircie si nécessaire dans le thème sombre.",
     "Textfarbe im hellen Design.": "Couleur du texte dans le thème clair.",
-    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Arrière-plan des pages dans le thème clair. Appliqué uniquement si les couleurs de premier plan et d’arrière-plan sont lisibles ensemble."
+    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Arrière-plan des pages dans le thème clair. Appliqué uniquement si les couleurs de premier plan et d’arrière-plan sont lisibles ensemble.",
+    "Bitte wählen Sie Ihre Ansprechperson erneut aus.": "Veuillez sélectionner à nouveau la personne que vous visitez.",
+    "Bitte wählen Sie aus, wen Sie besuchen.": "Veuillez indiquer qui vous visitez.",
+    "Die Anfrage ist ungültig. Bitte erneut versuchen.": "La demande n’est pas valide. Veuillez réessayer.",
+    "Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.": "L’enregistrement n’est pas possible ici pour le moment. Veuillez vous adresser à l’accueil.",
+    "Dieser Abmeldelink ist nicht mehr gültig. Bitte melden Sie sich am Empfang ab.": "Ce lien de départ n’est plus valide. Veuillez signaler votre départ à l’accueil.",
+    "Dieser Besuchertyp ist hier nicht verfügbar.": "Ce type de visiteur n’est pas disponible ici.",
+    "Empfangskontakt": "Contact de l’accueil",
+    "Selbst angemeldet (:channel).": "Enregistré par le visiteur (:channel).",
+    "Wird als Gastgeber eingetragen, wenn ein Besuchertyp keinen Gastgeber braucht oder der Besucher keinen auswählt, z. B. bei Lieferungen.": "Enregistré comme hôte lorsqu’un type de visiteur n’a pas besoin d’hôte ou que le visiteur n’en choisit pas, p. ex. pour les livraisons."
 }

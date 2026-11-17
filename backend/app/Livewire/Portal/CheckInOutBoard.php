@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Visit;
 use App\Models\Visitor;
 use App\Services\VisitActionService;
+use App\Services\WalkInVisitService;
 use App\Support\VisitorContactRequirement;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -134,7 +135,7 @@ class CheckInOutBoard extends Component
 
         [$visit, $visitor] = DB::transaction(function () use ($payload, $user, $hostId, $siteId) {
             $visitor = $this->resolveWalkInVisitor($payload['walkIn'], $user);
-            $visit = $this->createWalkInVisit($visitor, $user, $hostId, $siteId, $this->walkInIsConfidential);
+            $visit = app(WalkInVisitService::class)->createVisit($visitor, $user, $hostId, $siteId, $this->walkInIsConfidential);
 
             $visit->visitors()->syncWithoutDetaching([
                 $visitor->id => [
@@ -433,28 +434,6 @@ class CheckInOutBoard extends Component
             'company' => $this->normalizeText($payload['company'] ?? null),
             'notes' => null,
             'created_by_user_id' => $actor->id,
-        ]);
-    }
-
-    private function createWalkInVisit(Visitor $visitor, User $user, int $hostId, int $siteId, bool $isConfidential): Visit
-    {
-        $displayName = trim(implode(' ', array_filter([
-            $visitor->title,
-            $visitor->first_name,
-            $visitor->name,
-        ])));
-
-        return Visit::query()->create([
-            'title' => __('Walk-in: :name', ['name' => $displayName !== '' ? $displayName : __('Gast')]),
-            'site_id' => $siteId,
-            'host_user_id' => $hostId,
-            'created_by_user_id' => $user->id,
-            'scheduled_from' => now(),
-            'scheduled_until' => now()->addHour(),
-            'status' => VisitStatusEnum::Planned->value,
-            'is_walk_in' => true,
-            'is_confidential' => $isConfidential,
-            'notes' => __('Am Empfang als Walk-in erfasst.'),
         ]);
     }
 

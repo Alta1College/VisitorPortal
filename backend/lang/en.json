@@ -811,5 +811,14 @@
     "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Photos, signatures and uploaded evidence are deleted after this. The answers themselves are kept until the visit is deleted.",
     "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.": "For buttons, links and selection controls in the portal and admin area. Lightened in the dark theme where needed.",
     "Textfarbe im hellen Design.": "Text colour in the light theme.",
-    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Page background in the light theme. Only applied when the foreground and background colours are readable together."
+    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Page background in the light theme. Only applied when the foreground and background colours are readable together.",
+    "Bitte wählen Sie Ihre Ansprechperson erneut aus.": "Please choose the person you are visiting again.",
+    "Bitte wählen Sie aus, wen Sie besuchen.": "Please choose who you are visiting.",
+    "Die Anfrage ist ungültig. Bitte erneut versuchen.": "The request is not valid. Please try again.",
+    "Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.": "Signing in here is not possible right now. Please go to reception.",
+    "Dieser Abmeldelink ist nicht mehr gültig. Bitte melden Sie sich am Empfang ab.": "This sign-out link is no longer valid. Please sign out at reception.",
+    "Dieser Besuchertyp ist hier nicht verfügbar.": "This visitor type is not available here.",
+    "Empfangskontakt": "Reception contact",
+    "Selbst angemeldet (:channel).": "Self-registered (:channel).",
+    "Wird als Gastgeber eingetragen, wenn ein Besuchertyp keinen Gastgeber braucht oder der Besucher keinen auswählt, z. B. bei Lieferungen.": "Recorded as the host when a visitor type needs no host or the visitor does not choose one, e.g. deliveries."
 }

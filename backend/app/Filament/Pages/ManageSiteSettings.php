@@ -9,6 +9,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Site;
+use App\Models\User;
 use App\Settings\Filament\SettingFields;
 use App\Settings\SettingDefinition;
 use App\Settings\SettingsRegistry;
@@ -160,6 +161,11 @@ class ManageSiteSettings extends Page
 
         if ($definition->type === SettingDefinition::TYPE_IMAGE) {
             return __('Leer lassen, um das Logo der Organisation zu verwenden.');
+        }
+
+        if ($definition->type === SettingDefinition::TYPE_USER) {
+            $user = User::query()->find($value);
+            $value = $user ? trim($user->first_name.' '.$user->name) : '—';
         }
 
         return __('Organisation: :value', ['value' => Str::limit((string) $value, 80)]);
