@@ -806,5 +806,8 @@
     "ist nicht gleich": "se nerovná",
     "mindestens eine Regel zutrifft": "platí alespoň jedno pravidlo",
     "Aufbewahrung von Nachweisdateien (Tage)": "Uchovávání souborů s doklady (dny)",
-    "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Fotografie, podpisy a nahrané doklady se poté smažou. Samotné odpovědi zůstávají až do smazání návštěvy."
+    "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Fotografie, podpisy a nahrané doklady se poté smažou. Samotné odpovědi zůstávají až do smazání návštěvy.",
+    "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.": "Pro tlačítka, odkazy a výběrové prvky v portálu i administraci. V tmavém motivu se v případě potřeby zesvětlí.",
+    "Textfarbe im hellen Design.": "Barva textu ve světlém motivu.",
+    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Pozadí stránek ve světlém motivu. Použije se jen tehdy, když je text v barvě popředí na pozadí dobře čitelný."
 }

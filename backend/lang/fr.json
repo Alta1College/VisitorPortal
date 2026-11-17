@@ -806,5 +806,8 @@
     "ist nicht gleich": "n’est pas égal à",
     "mindestens eine Regel zutrifft": "au moins une règle correspond",
     "Aufbewahrung von Nachweisdateien (Tage)": "Conservation des justificatifs (jours)",
-    "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Les photos, signatures et justificatifs téléversés sont ensuite supprimés. Les réponses elles-mêmes sont conservées jusqu’à la suppression de la visite."
+    "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Les photos, signatures et justificatifs téléversés sont ensuite supprimés. Les réponses elles-mêmes sont conservées jusqu’à la suppression de la visite.",
+    "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.": "Pour les boutons, liens et contrôles de sélection du portail et de l’administration. Éclaircie si nécessaire dans le thème sombre.",
+    "Textfarbe im hellen Design.": "Couleur du texte dans le thème clair.",
+    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Arrière-plan des pages dans le thème clair. Appliqué uniquement si les couleurs de premier plan et d’arrière-plan sont lisibles ensemble."
 }

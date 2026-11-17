@@ -36,6 +36,13 @@ and through a migration for existing ones.
   re-validated on output, so a tampered row cannot inject CSS). The admin panel loads it and uses
   the primary colour as its Filament primary. Fork layouts (kiosk, mobile) consume the variables;
   upstream Tailwind classes are untouched.
+- **Portal theme (follow-up).** The same stylesheet maps the colours onto upstream's daisyUI theme
+  variables, and the portal, login/guest and welcome-screen layouts load it (one line each):
+  primary, secondary and accent apply in every theme. In dark themes, each is mixed with white
+  until it reaches 4.5:1 contrast on the dark surface. Button text (`--color-*-content`) is
+  black or white, whichever contrasts more. Foreground and background apply to the light theme
+  only, and only when they reach 4.5:1 together; otherwise both are ignored. In the light theme,
+  the brand colours are used exactly as entered, so a very light primary makes light text links.
 - **Logos** are raster only (PNG/JPEG/WebP; SVG is refused to avoid script in images), validated
   and metadata-stripped by upstream's `SafeRasterImage`, stored on the `public` disk under
   `branding/`. Replaced files are deleted; nothing outside `branding/` is ever removed.
