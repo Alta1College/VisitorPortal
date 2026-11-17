@@ -20,9 +20,13 @@ final class ForkPermissions
 
     public const VIEW_AUDIT_EVENTS = 'ViewAny:AuditEvent';
 
+    /** Visitor types, form fields and policies. */
+    public const MANAGE_VISITOR_WORKFLOW = 'Manage:VisitorWorkflow';
+
     public const ADMIN = [
         self::MANAGE_ORGANISATION_SETTINGS,
         self::MANAGE_SITE_SETTINGS,
         self::VIEW_AUDIT_EVENTS,
+        self::MANAGE_VISITOR_WORKFLOW,
     ];
 }

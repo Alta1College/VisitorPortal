@@ -50,4 +50,8 @@ return [
     // Days to keep audit events before visitorportal:audit:purge removes them.
     'audit_retention_days' => (int) env('AUDIT_RETENTION_DAYS', 1095),
 
+    // Days to keep visitor evidence files (photos, signatures, uploads) before
+    // visitorportal:evidence:purge removes them. The answer row stays until the visit is purged.
+    'evidence_retention_days' => (int) env('EVIDENCE_RETENTION_DAYS', 365),
+
 ];
