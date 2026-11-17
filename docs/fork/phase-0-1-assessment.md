@@ -24,9 +24,40 @@ Status: **for review**. No application code has been changed.
 
 Notes:
 
-- The assessment workspace could not pull Docker Hub images, so the stack was run natively. Before
-  Phase 2 starts, re-run the suite on the real Docker stack (MariaDB 11.4, Gotenberg) on Alta1
-  infrastructure and run the e2e specs. Expected to pass; recorded here as unverified.
+- The assessment workspace could not pull Docker Hub images, so the stack was run natively. The
+  re-run on the real Docker stack is recorded below.
+
+### 1.1 Docker stack re-run (2026-11-17)
+
+Run on the dev stack (`docker-compose.yml`, Docker 28.3.2 on Windows 11), branch `develop` at
+`fd4bc86` (upstream v0.9.1 + Symfony security update).
+
+| Item | Result |
+|---|---|
+| PHP / MariaDB / Gotenberg | 8.4.27 / 11.4.13 / 8.32.0 |
+| `composer install`, `key:generate` | OK |
+| `npm ci` + `npm run build` (node:24-alpine) | OK |
+| `migrate:fresh --seed` on MariaDB 11.4 | OK |
+| `php artisan test` | **413 passed, 0 failed** (2,669 assertions, 357 s) |
+| `pint --test` | Pass (320 files) |
+| Playwright e2e: visit-actions, mfa, recovery-codes | **11 passed** (Playwright 1.56.1, chromium) |
+| Playwright e2e: SSO (`docker-compose.sso-test.yml`, Keycloak OIDC) | **1 passed** |
+| Gotenberg badge rendering | OK — one-page PDF, MediaBox 242.88 × 153.08 pt (≈ 85.7 × 54 mm) after crop |
+
+**The baseline holds on the production database version.**
+
+Notes:
+
+- The suite is ~10× slower here than the native run (357 s vs 36 s). The cause is the Windows
+  bind mount, not the tests; Linux hosts or WSL2-native checkouts should be near native speed.
+- No Node on the host: the three dev-stack specs were run in `mcr.microsoft.com/playwright:v1.56.1-noble`
+  on the compose network with `BASE_URL=http://web` and `DB_HOST=db`. The PHP suite resets the
+  database, so re-seed before running e2e. Stop the `node` service (Vite dev server) and run
+  `npm run build` first, otherwise pages point at `localhost:5173`, which the Playwright container
+  cannot reach.
+- Badge rendering was exercised by calling the same `Pdf::view(...)->driver('gotenberg')` chain as
+  `VisitParticipantActionController::printBadge` from tinker, so visit state was not changed.
+  `artisan tinker` in the `web` container needs `-e HOME=/tmp` (the container user has no home).
 - Composer warns `tests/Feature/AdminPanel/AdminAdministerUserTest.php` does not comply with PSR-4
   and is skipped by the autoloader. PHPUnit still discovers it by path, so it runs. Cosmetic; worth
   reporting upstream.
@@ -316,7 +347,7 @@ Docker deployment all exist and are tested.
 ## 13. Open items before Phase 2
 
 1. Link the GitHub account to this workspace so branches can be pushed.
-2. Re-run the baseline on the Docker stack (MariaDB 11.4 + Gotenberg) and the e2e specs.
-3. Apply the Symfony patch update (or adopt upstream's if released first).
+2. ~~Re-run the baseline on the Docker stack (MariaDB 11.4 + Gotenberg) and the e2e specs.~~ Done 2026-11-17, all passing (§1.1).
+3. ~~Apply the Symfony patch update (or adopt upstream's if released first).~~ Done (PR #2).
 4. Create the private deployment repository.
 5. Optional: open an upstream discussion about contributing the settings overlay and walk-in service extraction.
