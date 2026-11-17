@@ -8,15 +8,18 @@
 
 namespace Tests\Feature\Fork;
 
+use App\Filament\Resources\FormFields\FormFieldResource;
 use App\Filament\Resources\FormFields\Pages\CreateFormField;
 use App\Filament\Resources\FormFields\Pages\ListFormFields;
 use App\Filament\Resources\Policies\Pages\CreatePolicy;
 use App\Filament\Resources\Policies\Pages\EditPolicy;
 use App\Filament\Resources\Policies\Pages\ListPolicies;
+use App\Filament\Resources\Policies\PolicyResource;
 use App\Filament\Resources\Policies\RelationManagers\VersionsRelationManager;
 use App\Filament\Resources\VisitorTypes\Pages\CreateVisitorType;
 use App\Filament\Resources\VisitorTypes\Pages\EditVisitorType;
 use App\Filament\Resources\VisitorTypes\Pages\ListVisitorTypes;
+use App\Filament\Resources\VisitorTypes\VisitorTypeResource;
 use App\Models\Site;
 use App\Models\User;
 use App\Models\Visit;
@@ -46,6 +49,19 @@ class VisitorWorkflowAdminTest extends TestCase
         VisitorPortalPermissions::sync();
         $this->admin = User::factory()->create();
         $this->admin->assignRole('admin');
+    }
+
+    public function test_list_pages_offer_a_create_button_even_when_empty(): void
+    {
+        $pages = [
+            ListVisitorTypes::class => VisitorTypeResource::getUrl('create'),
+            ListFormFields::class => FormFieldResource::getUrl('create'),
+            ListPolicies::class => PolicyResource::getUrl('create'),
+        ];
+
+        foreach ($pages as $page => $createUrl) {
+            Livewire::actingAs($this->admin)->test($page)->assertOk()->assertSee($createUrl, false);
+        }
     }
 
     public function test_admin_can_create_a_visitor_type_limited_to_a_site(): void

@@ -16,6 +16,7 @@ use App\VisitorWorkflow\ConditionEvaluator;
 use App\VisitorWorkflow\Models\FormField;
 use App\VisitorWorkflow\Models\VisitorType;
 use BackedEnum;
+use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -196,7 +197,9 @@ class FormFieldResource extends Resource
             ->filters([
                 SelectFilter::make('type')->label(__('Feldtyp'))->options(FormField::types()),
             ])
-            ->recordActions([EditAction::make()]);
+            ->recordActions([EditAction::make()])
+            ->toolbarActions([CreateAction::make()])
+            ->emptyStateActions([CreateAction::make()]);
     }
 
     public static function getPages(): array

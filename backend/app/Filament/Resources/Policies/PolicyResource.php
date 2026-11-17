@@ -16,6 +16,7 @@ use App\Models\Site;
 use App\VisitorWorkflow\Models\Policy;
 use App\VisitorWorkflow\Models\VisitorType;
 use BackedEnum;
+use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\MarkdownEditor;
@@ -136,7 +137,9 @@ class PolicyResource extends Resource
                 TextColumn::make('assignments_count')->label(__('Zuordnungen'))->counts('assignments'),
                 IconColumn::make('is_active')->label(__('Aktiv'))->boolean(),
             ])
-            ->recordActions([EditAction::make()]);
+            ->recordActions([EditAction::make()])
+            ->toolbarActions([CreateAction::make()])
+            ->emptyStateActions([CreateAction::make()]);
     }
 
     public static function getRelations(): array

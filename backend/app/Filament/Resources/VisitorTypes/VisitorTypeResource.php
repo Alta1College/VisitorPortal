@@ -13,6 +13,7 @@ use App\Filament\Resources\VisitorTypes\Pages\EditVisitorType;
 use App\Filament\Resources\VisitorTypes\Pages\ListVisitorTypes;
 use App\VisitorWorkflow\Models\VisitorType;
 use BackedEnum;
+use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
@@ -115,7 +116,9 @@ class VisitorTypeResource extends Resource
                     ->default(__('Alle Standorte')),
                 IconColumn::make('is_active')->label(__('Aktiv'))->boolean(),
             ])
-            ->recordActions([EditAction::make()]);
+            ->recordActions([EditAction::make()])
+            ->toolbarActions([CreateAction::make()])
+            ->emptyStateActions([CreateAction::make()]);
     }
 
     public static function getPages(): array
