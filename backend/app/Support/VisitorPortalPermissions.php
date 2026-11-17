@@ -164,6 +164,9 @@ class VisitorPortalPermissions
             'View:UserPermissions',
         ]));
 
+        // Fork: organisation settings and audit permissions (see docs/fork/upstream-patches.md).
+        $adminPermissions = self::unique(array_merge($adminPermissions, ForkPermissions::ADMIN));
+
         return [
             'admin' => $adminPermissions,
             'user' => $userPermissions,
