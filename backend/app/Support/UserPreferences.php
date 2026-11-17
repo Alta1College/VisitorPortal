@@ -110,6 +110,7 @@ class UserPreferences
             }
         }
 
-        return self::LOCALE_EN;
+        // Fork: fall back to the organisation's default locale (app.locale) instead of always English.
+        return self::normalizeLocale(config('app.locale')) ?? self::LOCALE_EN;
     }
 }

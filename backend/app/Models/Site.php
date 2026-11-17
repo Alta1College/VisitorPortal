@@ -43,7 +43,7 @@ class Site extends Model
             ['slug' => self::DEFAULT_SLUG],
             [
                 'name' => 'Default Site',
-                'timezone' => 'Europe/Berlin',
+                'timezone' => (string) config('app.timezone'),
                 'is_active' => true,
             ],
         );
