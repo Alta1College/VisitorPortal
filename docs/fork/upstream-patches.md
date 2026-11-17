@@ -22,3 +22,4 @@ upstream merges can be reviewed quickly. New files added by the fork are not lis
 | `backend/app/Livewire/Portal/CheckInOutBoard.php` | Walk-in visit creation moved to `App\Services\WalkInVisitService` (behaviour unchanged) | One walk-in implementation for reception and public channels | 4 | Yes |
 | `visit_visitor` table (migration, no file edit) | Additive nullable columns `checked_in_via`, `checked_out_via` | Record the channel of each check-in/out | 4 | No |
 | `backend/bootstrap/providers.php` | Register `PublicVisitServiceProvider` | Public route group, rate limiters, host directory | 4 | No |
+| `visit_visitor` table (migration, no file edit) | Additive nullable column `kiosk_id` | Which kiosk recorded a sign-in | 5 | No |

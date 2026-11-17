@@ -33,5 +33,7 @@ final class ArrivalRequest
         public readonly ?string $hostToken,
         public readonly array $answers,
         public readonly array $acceptedPolicyVersionIds,
+        /** Set by the server from the enrolled device, never by the visitor. */
+        public readonly ?int $kioskId = null,
     ) {}
 }
