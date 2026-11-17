@@ -811,5 +811,14 @@
     "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.": "Fotos, Unterschriften und hochgeladene Nachweise werden danach gelöscht. Die Antworten selbst bleiben bis zur Löschung des Besuchs erhalten.",
     "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.": "Für Schaltflächen, Links und Auswahlfelder im Portal und im Verwaltungsbereich. Im dunklen Design wird sie bei Bedarf aufgehellt.",
     "Textfarbe im hellen Design.": "Textfarbe im hellen Design.",
-    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind."
+    "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.": "Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.",
+    "Bitte wählen Sie Ihre Ansprechperson erneut aus.": "Bitte wählen Sie Ihre Ansprechperson erneut aus.",
+    "Bitte wählen Sie aus, wen Sie besuchen.": "Bitte wählen Sie aus, wen Sie besuchen.",
+    "Die Anfrage ist ungültig. Bitte erneut versuchen.": "Die Anfrage ist ungültig. Bitte erneut versuchen.",
+    "Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.": "Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.",
+    "Dieser Abmeldelink ist nicht mehr gültig. Bitte melden Sie sich am Empfang ab.": "Dieser Abmeldelink ist nicht mehr gültig. Bitte melden Sie sich am Empfang ab.",
+    "Dieser Besuchertyp ist hier nicht verfügbar.": "Dieser Besuchertyp ist hier nicht verfügbar.",
+    "Empfangskontakt": "Empfangskontakt",
+    "Selbst angemeldet (:channel).": "Selbst angemeldet (:channel).",
+    "Wird als Gastgeber eingetragen, wenn ein Besuchertyp keinen Gastgeber braucht oder der Besucher keinen auswählt, z. B. bei Lieferungen.": "Wird als Gastgeber eingetragen, wenn ein Besuchertyp keinen Gastgeber braucht oder der Besucher keinen auswählt, z. B. bei Lieferungen."
 }

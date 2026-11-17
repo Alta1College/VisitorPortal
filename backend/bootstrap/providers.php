@@ -10,6 +10,7 @@ use App\Audit\AuditServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
 use App\Providers\FortifyServiceProvider;
+use App\PublicVisit\PublicVisitServiceProvider;
 use App\Settings\SettingsServiceProvider;
 use App\VisitorWorkflow\VisitorWorkflowServiceProvider;
 
@@ -18,6 +19,7 @@ return [
     AuditServiceProvider::class,
     SettingsServiceProvider::class,
     VisitorWorkflowServiceProvider::class,
+    PublicVisitServiceProvider::class,
     AppServiceProvider::class,
     FortifyServiceProvider::class,
     AdminPanelProvider::class,

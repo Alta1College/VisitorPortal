@@ -105,6 +105,8 @@ final class SettingsRegistry
             new SettingDefinition('organisation.visitor_experience.sign_out_confirmation', SettingDefinition::TYPE_TEXT, self::GROUP_VISITOR_EXPERIENCE, $string(500)),
             new SettingDefinition('branding.monitor_fallback_heading', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(120)),
             new SettingDefinition('branding.monitor_fallback_subheading', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(200)),
+            new SettingDefinition('organisation.reception_host_user_id', SettingDefinition::TYPE_USER, self::GROUP_VISITOR_EXPERIENCE,
+                ['integer', Rule::exists('users', 'id')->where('is_active', true)], siteOverridable: true),
 
             // Regional
             new SettingDefinition('app.locale', SettingDefinition::TYPE_LOCALE, self::GROUP_REGIONAL, ['string', Rule::in(UserPreferences::supportedLocales())], required: true),

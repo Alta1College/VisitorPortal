@@ -47,6 +47,10 @@ return [
         'sign_out_confirmation' => env('VISITOR_SIGN_OUT_CONFIRMATION'),
     ],
 
+    // User recorded as host when a visitor type needs no host, or the visitor does not pick
+    // one where it is optional (e.g. deliveries). Usually a reception account. Set per site.
+    'reception_host_user_id' => env('RECEPTION_HOST_USER_ID'),
+
     // Days to keep audit events before visitorportal:audit:purge removes them.
     'audit_retention_days' => (int) env('AUDIT_RETENTION_DAYS', 1095),
 

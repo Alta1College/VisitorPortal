@@ -8,6 +8,7 @@
 
 namespace App\Settings\Filament;
 
+use App\Models\User;
 use App\Rules\SafeRasterImage;
 use App\Settings\SettingDefinition;
 use App\Settings\SettingsRegistry;
@@ -58,6 +59,7 @@ final class SettingFields
             'organisation.visitor_experience.sign_out_confirmation' => ['Bestätigung nach der Abmeldung'],
             'branding.monitor_fallback_heading' => ['Überschrift der Willkommensanzeige'],
             'branding.monitor_fallback_subheading' => ['Unterzeile der Willkommensanzeige'],
+            'organisation.reception_host_user_id' => ['Empfangskontakt', 'Wird als Gastgeber eingetragen, wenn ein Besuchertyp keinen Gastgeber braucht oder der Besucher keinen auswählt, z. B. bei Lieferungen.'],
             'app.locale' => ['Standardsprache', 'Gilt, wenn weder Benutzer noch Browser eine unterstützte Sprache vorgeben.'],
             'privacy.visit_retention_days' => ['Aufbewahrung von Besuchen (Tage)', 'Ältere Besuche werden automatisch gelöscht, sofern keine Aufbewahrungssperre besteht.'],
             'privacy.notification_retention_days' => ['Aufbewahrung von Benachrichtigungen (Tage)'],
@@ -84,6 +86,12 @@ final class SettingFields
             SettingDefinition::TYPE_INTEGER => TextInput::make($definition->field())->integer(),
             SettingDefinition::TYPE_LOCALE => Select::make($definition->field())->options(self::localeOptions())->native(false),
             SettingDefinition::TYPE_IMAGE => self::imageUpload($definition),
+            SettingDefinition::TYPE_USER => Select::make($definition->field())
+                ->options(fn (): array => User::query()->where('is_active', true)->orderBy('first_name')->orderBy('name')
+                    ->get(['id', 'first_name', 'name'])
+                    ->mapWithKeys(fn ($user) => [$user->id => trim($user->first_name.' '.$user->name)])->all())
+                ->searchable()
+                ->native(false),
             default => TextInput::make($definition->field()),
         };
 

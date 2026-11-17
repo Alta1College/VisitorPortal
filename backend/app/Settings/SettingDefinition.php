@@ -28,6 +28,9 @@ final class SettingDefinition
 
     public const TYPE_LOCALE = 'locale';
 
+    /** An active local user, stored by id. */
+    public const TYPE_USER = 'user';
+
     /**
      * @param  list<mixed>  $rules  Validation rules applied to non-null values.
      */
@@ -55,7 +58,7 @@ final class SettingDefinition
         }
 
         return match ($this->type) {
-            self::TYPE_INTEGER => (int) $value,
+            self::TYPE_INTEGER, self::TYPE_USER => (int) $value,
             self::TYPE_COLOR => strtolower(trim((string) $value)),
             default => is_string($value) ? trim($value) : $value,
         };

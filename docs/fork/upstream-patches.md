@@ -18,3 +18,7 @@ upstream merges can be reviewed quickly. New files added by the fork are not lis
 | `backend/app/Mail/{Guest,Host}/*Mail.php` (6 files) | Envelope subjects wrapped in `__()` | Subjects were hard-coded German in every language | fix | Yes |
 | `backend/tests/Feature/{Auth/MfaTest,Notification/NotificationTest,Portal/CheckInOutBoardTest,Receptionist/ReceptionAdministerVisitTest}.php` | Assertions use `__()`/`trans_choice()` instead of literal German | Tests had asserted the untranslated text | fix | Yes |
 | `backend/resources/views/layouts/{app,guest}.blade.php`, `backend/resources/views/monitor/show.blade.php` | One line after the app stylesheet: `<x-brand-stylesheet />` | Organisation colours in the portal, login and welcome screens | 2 (follow-up) | No |
+| `backend/app/Services/VisitActionService.php` | `checkInParticipant` / `checkOutParticipant` accept `?User $actionBy` (null-safe id) | Visitors check themselves in and out on public channels; no fake staff user | 4 | Yes |
+| `backend/app/Livewire/Portal/CheckInOutBoard.php` | Walk-in visit creation moved to `App\Services\WalkInVisitService` (behaviour unchanged) | One walk-in implementation for reception and public channels | 4 | Yes |
+| `visit_visitor` table (migration, no file edit) | Additive nullable columns `checked_in_via`, `checked_out_via` | Record the channel of each check-in/out | 4 | No |
+| `backend/bootstrap/providers.php` | Register `PublicVisitServiceProvider` | Public route group, rate limiters, host directory | 4 | No |
