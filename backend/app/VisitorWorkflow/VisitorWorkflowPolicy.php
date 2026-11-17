@@ -10,6 +10,7 @@ namespace App\VisitorWorkflow;
 
 use App\Models\User;
 use App\Support\ForkPermissions;
+use App\VisitorWorkflow\Models\FormField;
 use App\VisitorWorkflow\Models\Policy;
 use App\VisitorWorkflow\Models\VisitorType;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +52,13 @@ class VisitorWorkflowPolicy
         return match (true) {
             $model instanceof VisitorType => ! DB::table('visit_visitor')->where('visitor_type_id', $model->getKey())->exists(),
             $model instanceof Policy => ! $model->versions()->exists(),
+            // Answers keep a snapshot, so a field can go, unless another field's
+            // show-when rule depends on it (that field would silently never show).
+            $model instanceof FormField => ! FormField::query()
+                ->whereKeyNot($model->getKey())
+                ->whereNotNull('conditions')
+                ->get(['id', 'conditions'])
+                ->contains(fn (FormField $other): bool => in_array($model->key, array_column($other->conditions['rules'] ?? [], 'field'), true)),
             default => true,
         };
     }

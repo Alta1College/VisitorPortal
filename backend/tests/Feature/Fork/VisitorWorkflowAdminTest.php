@@ -10,6 +10,7 @@ namespace Tests\Feature\Fork;
 
 use App\Filament\Resources\FormFields\FormFieldResource;
 use App\Filament\Resources\FormFields\Pages\CreateFormField;
+use App\Filament\Resources\FormFields\Pages\EditFormField;
 use App\Filament\Resources\FormFields\Pages\ListFormFields;
 use App\Filament\Resources\Policies\Pages\CreatePolicy;
 use App\Filament\Resources\Policies\Pages\EditPolicy;
@@ -179,6 +180,30 @@ class VisitorWorkflowAdminTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(EditPolicy::class, ['record' => $policy->getKey()])
             ->assertActionHidden(DeleteAction::class);
+    }
+
+    public function test_fields_can_be_deleted_unless_another_field_depends_on_them(): void
+    {
+        $question = FormField::query()->create(['key' => 'works_with_children', 'label' => 'Q', 'type' => FormField::TYPE_YES_NO]);
+        $dependent = FormField::query()->create([
+            'key' => 'card_number', 'label' => 'Card', 'type' => FormField::TYPE_SHORT_TEXT,
+            'conditions' => ['match' => 'all', 'rules' => [['field' => 'works_with_children', 'operator' => 'equals', 'value' => '1']]],
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(EditFormField::class, ['record' => $question->getKey()])
+            ->assertActionHidden(DeleteAction::class);
+
+        Livewire::actingAs($this->admin)
+            ->test(EditFormField::class, ['record' => $dependent->getKey()])
+            ->assertActionVisible(DeleteAction::class)
+            ->callAction(DeleteAction::class);
+
+        $this->assertModelMissing($dependent);
+
+        Livewire::actingAs($this->admin)
+            ->test(EditFormField::class, ['record' => $question->getKey()])
+            ->assertActionVisible(DeleteAction::class);
     }
 
     public function test_users_without_permission_cannot_manage_the_workflow(): void
