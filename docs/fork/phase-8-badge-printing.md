@@ -1,6 +1,8 @@
 # Phase 8: Badge printing
 
-Status: **for review, physical printing test pending**. Branch `feature/phase-8-badge-printing`.
+Status: **for review**. Branch `feature/phase-8-badge-printing`. Physical test passed: sample badge
+printed correctly on a Brother QL-820NWB with 62 × 100 mm die-cut labels, sent from the server
+over the network (no dialog).
 
 The brief (§20) asks for a printing spike before any print service. Safari on iPad always shows
 the AirPrint dialog, which the organisation did not want at a kiosk; a native iPad app (the
