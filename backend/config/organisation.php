@@ -36,6 +36,9 @@ return [
         'background' => env('BRANDING_COLOR_BACKGROUND'),
     ],
 
+    // Address visitors' phones use to reach the portal (QR codes). Empty: the current request's address.
+    'public_url' => env('VISITOR_PUBLIC_URL'),
+
     // Wording shown to visitors on kiosk and mobile sign-in (consumed from Phase 5 onwards).
     'visitor_experience' => [
         'welcome_heading' => env('VISITOR_WELCOME_HEADING'),

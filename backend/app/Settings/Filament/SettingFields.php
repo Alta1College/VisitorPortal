@@ -50,6 +50,7 @@ final class SettingFields
             'organisation.colors.foreground' => ['Vordergrundfarbe', 'Textfarbe im hellen Design.'],
             'organisation.colors.background' => ['Hintergrundfarbe', 'Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.'],
             'branding.badge_accent_color' => ['Akzentfarbe des Besucherausweises'],
+            'organisation.public_url' => ['Öffentliche Adresse', 'Adresse, unter der Besucher das Portal von ihrem Handy erreichen, z. B. https://besuch.example.org. Wird für QR-Codes verwendet. Leer: die Adresse, unter der die Seite gerade geöffnet ist.'],
             'organisation.visitor_experience.welcome_heading' => ['Begrüßungsüberschrift', 'Am Kiosk unter dem tageszeitabhängigen Gruß („Guten Morgen!“). Leer: „Gäste, bitte hier beginnen.“'],
             'organisation.visitor_experience.welcome_message' => ['Begrüßungstext'],
             'organisation.visitor_experience.visitor_type_question' => ['Frage nach dem Besuchertyp', 'Steht am Kiosk über den Besuchertypen. Leer: „Was führt Sie zu uns?“'],

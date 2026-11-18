@@ -82,6 +82,7 @@ final class SettingsRegistry
             new SettingDefinition('organisation.contact_email', SettingDefinition::TYPE_EMAIL, self::GROUP_IDENTITY, ['email:rfc', 'max:191'], siteOverridable: true),
             new SettingDefinition('organisation.contact_phone', SettingDefinition::TYPE_STRING, self::GROUP_IDENTITY, $string(40), siteOverridable: true),
             new SettingDefinition('organisation.address', SettingDefinition::TYPE_TEXT, self::GROUP_IDENTITY, $string(500), siteOverridable: true),
+            new SettingDefinition('organisation.public_url', SettingDefinition::TYPE_STRING, self::GROUP_IDENTITY, ['url:http,https', 'max:191']),
 
             // Branding
             new SettingDefinition('branding.logo_light', SettingDefinition::TYPE_IMAGE, self::GROUP_BRANDING, siteOverridable: true),
