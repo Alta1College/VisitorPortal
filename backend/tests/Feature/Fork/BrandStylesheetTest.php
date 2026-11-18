@@ -134,4 +134,12 @@ class BrandStylesheetTest extends TestCase
             BrandStylesheet::css(),
         );
     }
+
+    public function test_visitor_screens_use_the_background_colour_on_primary_buttons(): void
+    {
+        $this->assertStringNotContainsString('.brand-on-primary', BrandStylesheet::css());
+
+        app(SettingsRepository::class)->saveOrganisation(['organisation.colors.primary' => '#6cc4b8', 'organisation.colors.background' => '#e7e9e8'], null);
+        $this->assertMatchesRegularExpression('/^\.brand-on-primary \{\s*--color-primary-content: #e7e9e8;/m', BrandStylesheet::css());
+    }
 }

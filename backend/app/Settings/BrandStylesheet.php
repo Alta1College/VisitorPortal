@@ -108,6 +108,13 @@ final class BrandStylesheet
             ]);
         }
 
+        // Visitor-facing screens (.brand-on-primary): text on primary buttons in the organisation's
+        // background colour, so the kiosk uses brand colours only (organisation's choice; no
+        // contrast fallback here, unlike the portal and admin).
+        if (isset($tokens['primary'], $tokens['background'])) {
+            $blocks[] = self::block('.brand-on-primary', ['--color-primary-content' => $tokens['background']]);
+        }
+
         return implode("\n", $blocks);
     }
 

@@ -6,7 +6,7 @@
     $idleMs = max(15, (int) $kiosk->idle_timeout_seconds) * 1000;
 @endphp
 <div
-    class="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-8"
+    class="brand-on-primary flex min-h-dvh flex-col px-6 py-6 sm:px-12 sm:py-10"
     x-data="{
         timer: null,
         arm() {
@@ -23,96 +23,100 @@
 >
     <header class="flex items-center justify-between gap-4">
         @if ($logo)
-            <img src="{{ asset($logo) }}" alt="{{ config('branding.name') }}" class="h-14 w-auto">
+            <img src="{{ asset($logo) }}" alt="{{ config('branding.name') }}" class="h-14 w-auto max-w-[60%] object-contain sm:h-20">
         @else
-            <span class="text-2xl font-semibold">{{ config('branding.name') }}</span>
+            <span class="text-3xl font-extrabold">{{ config('branding.name') }}</span>
         @endif
         @if (! in_array($step, ['welcome', 'done'], true))
-            <button type="button" wire:click="restart" class="btn btn-ghost kiosk-tap">{{ __('Abbrechen') }}</button>
+            <button type="button" wire:click="restart" class="btn btn-outline rounded-full border-2 border-base-content/30 px-5 text-base font-bold text-base-content">{{ __('Abbrechen') }}</button>
         @endif
     </header>
 
-    @error('submit')
-        <div role="alert" class="alert alert-error text-lg">{{ $message }}</div>
-    @enderror
+    @if ($step === 'welcome')
+        {{-- Visitor types straight away: one tap starts the sign-in. Polls so the greeting and types stay current. --}}
+        <main wire:poll.300s class="flex flex-1 flex-col pt-[8vh]">
+            <h1 class="kiosk-hero">{{ $greeting }}<br>{{ $welcomeHeading }}</h1>
+            @if ($welcomeMessage)<p class="mt-4 max-w-2xl text-xl text-base-content">{{ $welcomeMessage }}</p>@endif
 
-    <main class="card flex-1 bg-base-100 shadow-sm">
-        <div class="card-body gap-6">
+            @error('submit')<div role="alert" class="alert alert-error mt-6 text-lg">{{ $message }}</div>@enderror
+            @error('type')<div role="alert" class="alert alert-error mt-6 text-lg">{{ $message }}</div>@enderror
 
-            @if ($step === 'welcome')
-                <div class="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-                    <h1 class="text-4xl font-bold">{{ $welcomeHeading }}</h1>
-                    @if ($welcomeMessage)<p class="max-w-xl text-xl text-base-content/80">{{ $welcomeMessage }}</p>@endif
-                    <p class="text-lg text-base-content/60">{{ $siteName }}</p>
-                    <button type="button" wire:click="start" class="btn btn-primary btn-lg kiosk-tap w-full max-w-md text-2xl">{{ $signInLabel }}</button>
-                    <p class="text-base text-base-content/60">{{ __('Zum Abmelden wenden Sie sich bitte an den Empfang.') }}</p>
-                </div>
-
-            @elseif ($step === 'type')
-                <h1 class="text-3xl font-semibold">{{ __('Was führt Sie zu uns?') }}</h1>
-                @error('type')<p class="text-error">{{ $message }}</p>@enderror
-                <div class="grid gap-4 sm:grid-cols-2">
+            @if ($types === [])
+                <p class="mt-10 max-w-xl text-2xl font-semibold">{{ __('Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.') }}</p>
+            @else
+                <p class="mt-6 text-xl font-bold sm:text-2xl">{{ __('Was führt Sie zu uns?') }}</p>
+                <div @class(['mt-8 gap-5', 'flex flex-col items-start' => count($types) <= 5, 'grid grid-cols-1 sm:grid-cols-2' => count($types) > 5])>
                     @foreach ($types as $type)
-                        <button type="button" wire:click="chooseType('{{ $type->slug }}')" class="btn btn-outline kiosk-tap h-auto justify-start py-5 text-left">
-                            <span class="flex flex-col items-start">
-                                <span class="text-xl font-semibold">{{ $type->name }}</span>
-                                @if ($type->description)<span class="text-sm font-normal opacity-70">{{ $type->description }}</span>@endif
-                            </span>
-                        </button>
+                        <button type="button" wire:key="type-{{ $type->slug }}" wire:click="chooseType('{{ $type->slug }}')"
+                                wire:loading.attr="disabled" class="btn btn-primary kiosk-pill">{{ $type->name }}</button>
                     @endforeach
                 </div>
+            @endif
 
-            @elseif ($step === 'details')
-                <h1 class="text-3xl font-semibold">{{ __('Ihre Angaben') }}</h1>
+            <footer class="mt-auto flex items-end justify-between gap-6 pt-10">
+                <p class="max-w-sm text-base text-base-content">{{ __('Zum Abmelden wenden Sie sich bitte an den Empfang.') }}</p>
+                {{-- Phase 6 adds the mobile check-in QR code here (bottom right). --}}
+            </footer>
+        </main>
+    @else
+    @error('submit')
+        <div role="alert" class="alert alert-error mx-auto mt-6 w-full max-w-3xl text-lg">{{ $message }}</div>
+    @enderror
+
+    <main class="mx-auto mt-6 flex w-full max-w-3xl flex-1 flex-col rounded-[2rem] bg-base-100 p-6 shadow-sm sm:p-10">
+        <div class="flex flex-1 flex-col gap-8">
+
+            @if ($step === 'details')
+                <h1 class="kiosk-title">{{ __('Ihre Angaben') }}</h1>
                 <form wire:submit="submitDetails" class="grid gap-4 sm:grid-cols-2">
                     @foreach (['first_name' => 'given-name', 'name' => 'family-name', 'email' => 'email', 'phone' => 'tel', 'company' => 'organization'] as $field => $autocomplete)
                         <label class="form-control {{ in_array($field, ['email', 'company'], true) ? 'sm:col-span-2' : '' }}">
-                            <span class="label-text mb-1 text-lg">{{ $detailLabels[$field] }}@if ($detailRequired[$field]) *@endif</span>
+                            <span class="mb-2 block text-lg font-semibold">{{ $detailLabels[$field] }}@if ($detailRequired[$field]) *@endif</span>
                             <input type="{{ $field === 'email' ? 'email' : ($field === 'phone' ? 'tel' : 'text') }}" autocomplete="{{ $autocomplete }}"
-                                   wire:model="details.{{ $field }}" class="input input-bordered input-lg w-full @error('details.'.$field) input-error @enderror">
+                                   wire:model="details.{{ $field }}" class="input input-bordered kiosk-field w-full @error('details.'.$field) input-error @enderror">
                             @error('details.'.$field)<span class="mt-1 text-error">{{ $message }}</span>@enderror
                         </label>
                     @endforeach
                     <div class="flex gap-3 sm:col-span-2">
-                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap">{{ __('Zurück') }}</button>
+                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
                         <button type="submit" class="btn btn-primary kiosk-tap flex-1">{{ __('Weiter') }}</button>
                     </div>
                 </form>
 
             @elseif ($step === 'host')
-                <h1 class="text-3xl font-semibold">{{ __('Wen besuchen Sie?') }}</h1>
+                <h1 class="kiosk-title">{{ __('Wen besuchen Sie?') }}</h1>
                 <input type="search" wire:model.live.debounce.300ms="hostQuery" autocomplete="off" placeholder="{{ __('Namen eingeben') }}"
-                       class="input input-bordered input-lg w-full" autofocus>
+                       class="input input-bordered kiosk-field w-full" autofocus>
                 @error('host')<p class="text-error">{{ $message }}</p>@enderror
                 <div class="flex flex-col gap-3">
                     @foreach ($hostResults as $index => $option)
-                        <button type="button" wire:click="chooseHost({{ $index }})" wire:key="host-{{ $index }}" class="btn btn-outline kiosk-tap justify-start">{{ $option['name'] }}</button>
+                        <button type="button" wire:click="chooseHost({{ $index }})" wire:key="host-{{ $index }}" class="btn btn-outline kiosk-tap justify-start border-2 text-2xl">{{ $option['name'] }}</button>
                     @endforeach
                     @if (mb_strlen(trim($hostQuery)) >= 2 && $hostResults === [])
-                        <p class="text-base-content/70">{{ __('Niemand gefunden. Bitte prüfen Sie die Schreibweise oder wenden Sie sich an den Empfang.') }}</p>
+                        <p class="text-base-content">{{ __('Niemand gefunden. Bitte prüfen Sie die Schreibweise oder wenden Sie sich an den Empfang.') }}</p>
                     @endif
                 </div>
                 <div class="mt-auto flex gap-3">
-                    <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap">{{ __('Zurück') }}</button>
+                    <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
                     @if ($visitorType && $visitorType->host_requirement === VisitorType::HOST_OPTIONAL)
                         <button type="button" wire:click="skipHost" class="btn btn-outline kiosk-tap flex-1">{{ __('Ich weiß es nicht') }}</button>
                     @endif
                 </div>
 
             @elseif ($step === 'questions')
-                <h1 class="text-3xl font-semibold">{{ __('Ein paar Fragen') }}</h1>
+                <h1 class="kiosk-title">{{ __('Ein paar Fragen') }}</h1>
                 <form wire:submit="submitQuestions" class="flex flex-col gap-6">
                     @foreach ($fields as $field)
                         @php($model = 'answers.'.$field->key)
                         <div wire:key="field-{{ $field->key }}" class="form-control gap-2">
                             @if (! in_array($field->type, [FormField::TYPE_CHECKBOX, FormField::TYPE_ACKNOWLEDGEMENT], true))
-                                <span class="text-lg font-medium">{{ $field->label }}@if ($field->is_required_here) *@endif</span>
+                                <span class="text-xl font-semibold">{{ $field->label }}@if ($field->is_required_here) *@endif</span>
                             @endif
-                            @if ($field->help_text)<span class="text-base-content/70">{{ $field->help_text }}</span>@endif
+                            @if ($field->help_text)<span class="text-base-content">{{ $field->help_text }}</span>@endif
 
                             @switch($field->type)
                                 @case(FormField::TYPE_LONG_TEXT)
-                                    <textarea wire:model="{{ $model }}" rows="4" class="textarea textarea-bordered text-lg"></textarea>
+                                    <textarea wire:model="{{ $model }}" rows="4" class="textarea textarea-bordered rounded-2xl text-xl"></textarea>
                                     @break
                                 @case(FormField::TYPE_YES_NO)
                                     <div class="grid grid-cols-2 gap-3">
@@ -131,7 +135,7 @@
                                     </label>
                                     @break
                                 @case(FormField::TYPE_DROPDOWN)
-                                    <select wire:model.live="{{ $model }}" class="select select-bordered select-lg w-full">
+                                    <select wire:model.live="{{ $model }}" class="select select-bordered kiosk-field w-full">
                                         <option value="">{{ __('Bitte auswählen') }}</option>
                                         @foreach ($field->options ?? [] as $option)
                                             <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
@@ -143,7 +147,7 @@
                                     <input type="file" wire:model="{{ $model }}" class="file-input file-input-bordered file-input-lg w-full"
                                            accept="{{ $field->type === FormField::TYPE_PHOTO ? 'image/jpeg,image/png,image/webp' : 'application/pdf,image/jpeg,image/png,image/webp' }}"
                                            @if ($field->type === FormField::TYPE_PHOTO) capture="user" @endif>
-                                    <span wire:loading wire:target="{{ $model }}" class="text-base-content/70">{{ __('Wird hochgeladen …') }}</span>
+                                    <span wire:loading wire:target="{{ $model }}" class="text-base-content">{{ __('Wird hochgeladen …') }}</span>
                                     @break
                                 @case(FormField::TYPE_SIGNATURE)
                                     <div x-data="{
@@ -163,20 +167,20 @@
                                     @break
                                 @default
                                     <input type="{{ match ($field->type) { FormField::TYPE_EMAIL => 'email', FormField::TYPE_PHONE => 'tel', FormField::TYPE_NUMBER => 'number', FormField::TYPE_DATE => 'date', default => 'text' } }}"
-                                           wire:model.blur="{{ $model }}" class="input input-bordered input-lg w-full">
+                                           wire:model.blur="{{ $model }}" class="input input-bordered kiosk-field w-full">
                             @endswitch
 
                             @error($model)<span class="text-error">{{ $message }}</span>@enderror
                         </div>
                     @endforeach
                     <div class="flex gap-3">
-                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap">{{ __('Zurück') }}</button>
+                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
                         <button type="submit" class="btn btn-primary kiosk-tap flex-1" wire:loading.attr="disabled">{{ __('Weiter') }}</button>
                     </div>
                 </form>
 
             @elseif ($step === 'policies')
-                <h1 class="text-3xl font-semibold">{{ __('Bitte lesen und bestätigen') }}</h1>
+                <h1 class="kiosk-title">{{ __('Bitte lesen und bestätigen') }}</h1>
                 @error('policies')<p class="text-error">{{ $message }}</p>@enderror
                 <div class="flex flex-col gap-6">
                     @foreach ($policies as $version)
@@ -192,27 +196,27 @@
                     @endforeach
                 </div>
                 <div class="flex gap-3">
-                    <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap">{{ __('Zurück') }}</button>
+                    <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
                     <button type="button" wire:click="submitPolicies" class="btn btn-primary kiosk-tap flex-1">{{ __('Weiter') }}</button>
                 </div>
 
             @elseif ($step === 'confirm')
-                <h1 class="text-3xl font-semibold">{{ __('Alles richtig?') }}</h1>
+                <h1 class="kiosk-title">{{ __('Alles richtig?') }}</h1>
                 <dl class="grid gap-3 text-xl sm:grid-cols-[auto_1fr]">
-                    <dt class="text-base-content/60">{{ __('Name') }}</dt>
+                    <dt class="text-base-content">{{ __('Name') }}</dt>
                     <dd class="font-medium">{{ trim(($details['first_name'] ?? '').' '.($details['name'] ?? '')) }}</dd>
                     @if ($visitorType)
-                        <dt class="text-base-content/60">{{ __('Besuchertyp') }}</dt>
+                        <dt class="text-base-content">{{ __('Besuchertyp') }}</dt>
                         <dd class="font-medium">{{ $visitorType->name }}</dd>
                     @endif
                     @if ($hostName)
-                        <dt class="text-base-content/60">{{ __('Sie besuchen') }}</dt>
+                        <dt class="text-base-content">{{ __('Sie besuchen') }}</dt>
                         <dd class="font-medium">{{ $hostName }}</dd>
                     @endif
                 </dl>
                 @if ($instructions)<p class="rounded-box bg-base-200 p-4 text-lg">{{ $instructions }}</p>@endif
                 <div class="mt-auto flex gap-3">
-                    <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap">{{ __('Zurück') }}</button>
+                    <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
                     <button type="button" wire:click="finish" wire:loading.attr="disabled" class="btn btn-primary kiosk-tap flex-1 text-2xl">
                         <span wire:loading.remove wire:target="finish">{{ $signInLabel }}</span>
                         <span wire:loading wire:target="finish" class="loading loading-spinner"></span>
@@ -221,10 +225,13 @@
 
             @elseif ($step === 'done')
                 <div class="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-                    <h1 class="text-4xl font-bold">{{ __('Danke, :name!', ['name' => $doneFirstName]) }}</h1>
+                    <span class="flex size-24 items-center justify-center rounded-full bg-primary text-primary-content" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="size-12"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    </span>
+                    <h1 class="kiosk-hero">{{ __('Danke, :name!', ['name' => $doneFirstName]) }}</h1>
                     <p class="text-2xl">{{ $confirmation ?: __('Sie sind angemeldet.') }}</p>
                     @if ($doneHostName)
-                        <p class="text-xl text-base-content/70">{{ __(':host wurde über Ihre Ankunft informiert.', ['host' => $doneHostName]) }}</p>
+                        <p class="text-xl text-base-content">{{ __(':host wurde über Ihre Ankunft informiert.', ['host' => $doneHostName]) }}</p>
                     @endif
                     <button type="button" wire:click="restart" class="btn btn-primary kiosk-tap w-full max-w-md">{{ __('Fertig') }}</button>
                 </div>
@@ -232,4 +239,5 @@
 
         </div>
     </main>
+    @endif
 </div>

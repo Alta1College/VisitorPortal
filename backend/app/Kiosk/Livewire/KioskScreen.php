@@ -43,7 +43,7 @@ class KioskScreen extends Component
 {
     use WithFileUploads;
 
-    public const STEPS = ['welcome', 'type', 'details', 'host', 'questions', 'policies', 'confirm', 'done'];
+    public const STEPS = ['welcome', 'details', 'host', 'questions', 'policies', 'confirm', 'done'];
 
     public string $step = 'welcome';
 
@@ -80,27 +80,12 @@ class KioskScreen extends Component
         $this->submissionKey = (string) Str::uuid();
     }
 
-    public function start(): void
-    {
-        $types = $this->types();
-
-        if ($types === []) {
-            $this->addError('submit', __('Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.'));
-
-            return;
-        }
-
-        if (count($types) === 1) {
-            $this->chooseType($types[0]->slug);
-
-            return;
-        }
-
-        $this->step = 'type';
-    }
-
+    /**
+     * The welcome screen lists the visitor types; tapping one starts the sign-in.
+     */
     public function chooseType(string $slug): void
     {
+        $this->resetErrorBag();
         $type = collect($this->types())->firstWhere('slug', $slug);
 
         if ($type === null) {
@@ -281,19 +266,34 @@ class KioskScreen extends Component
             'kiosk' => $kiosk,
             'siteName' => $site->name,
             'logo' => $settings->get('branding.logo_light'),
-            'welcomeHeading' => $settings->get('organisation.visitor_experience.welcome_heading') ?: __('Willkommen'),
+            'greeting' => $this->greeting($site),
+            'welcomeHeading' => $settings->get('organisation.visitor_experience.welcome_heading') ?: __('Gäste, bitte hier beginnen.'),
             'welcomeMessage' => $settings->get('organisation.visitor_experience.welcome_message'),
             'instructions' => $settings->get('organisation.visitor_experience.visitor_instructions'),
             // Own key: upstream translates "Anmelden" as the staff "Login".
             'signInLabel' => config('organisation.visitor_experience.sign_in_label') ?: __('Jetzt anmelden'),
             'confirmation' => config('organisation.visitor_experience.sign_in_confirmation'),
-            'types' => $this->step === 'type' ? $this->types() : [],
+            'types' => $this->step === 'welcome' ? $this->types() : [],
             'visitorType' => $this->typeSlug !== null ? $this->visitorType() : null,
             'fields' => $definition !== null ? $this->visibleFields($definition) : [],
             'policies' => $definition?->policies ?? [],
             'detailLabels' => VisitorDetails::labels(),
             'detailRequired' => array_map(fn (array $rules): bool => in_array('required', $rules, true), VisitorDetails::rules()),
         ])->layout('public.kiosk.layout', ['siteName' => $site->name, 'idleSeconds' => $kiosk->idle_timeout_seconds]);
+    }
+
+    /**
+     * Time-of-day greeting in the site's timezone (the welcome screen polls, so it stays current).
+     */
+    private function greeting(Site $site): string
+    {
+        $hour = (int) now($site->timezone ?: config('app.timezone'))->format('G');
+
+        return match (true) {
+            $hour < 12 => __('Guten Morgen!'),
+            $hour < 17 => __('Guten Tag!'),
+            default => __('Guten Abend!'),
+        };
     }
 
     private function kiosk(): Kiosk
@@ -397,13 +397,12 @@ class KioskScreen extends Component
     private function stepApplies(string $step): bool
     {
         if ($this->typeSlug === null) {
-            return in_array($step, ['welcome', 'type'], true);
+            return $step === 'welcome';
         }
 
         $definition = $this->definition();
 
         return match ($step) {
-            'type' => count($this->types()) > 1,
             'host' => $this->visitorType()->host_requirement !== VisitorType::HOST_NONE,
             'questions' => $definition->fields !== [],
             'policies' => $definition->policies !== [],

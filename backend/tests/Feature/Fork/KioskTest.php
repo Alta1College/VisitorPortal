@@ -84,7 +84,7 @@ class KioskTest extends TestCase
         $hash = PolicyVersion::query()->value('content_hash');
 
         $screen = $this->screen()
-            ->call('start')->assertSet('step', 'type')
+            ->assertSee('Contractor')->assertSee('Visitor')
             ->call('chooseType', 'contractor')->assertSet('step', 'details')
             ->set('details.first_name', 'Casey')->set('details.name', 'Contractor')->set('details.company', 'Spark Electrical')
             ->call('submitDetails')->assertHasNoErrors()->assertSet('step', 'host')
@@ -119,9 +119,9 @@ class KioskTest extends TestCase
         app(SettingsRepository::class)->saveSite($this->site, ['organisation.reception_host_user_id' => $reception->getKey()], null);
         VisitorType::query()->create(['name' => 'Delivery', 'slug' => 'delivery', 'host_requirement' => VisitorType::HOST_NONE]);
 
-        // One type only: no type step. No host, questions or policies: straight to confirm.
+        // No host, questions or policies: straight from details to confirm.
         $this->screen()
-            ->call('start')->assertSet('step', 'details')
+            ->call('chooseType', 'delivery')->assertSet('step', 'details')
             ->set('details.first_name', 'Dee')->set('details.name', 'Livery')
             ->call('submitDetails')->assertSet('step', 'confirm')
             ->call('finish')->assertSet('step', 'done');
@@ -134,7 +134,7 @@ class KioskTest extends TestCase
         $this->contractorWithConditionalCard();
 
         $screen = $this->screen()
-            ->call('start')->call('chooseType', 'contractor')
+            ->call('chooseType', 'contractor')
             ->set('details.first_name', 'Casey')->set('details.name', 'Contractor');
         $key = $screen->get('submissionKey');
 
@@ -151,7 +151,7 @@ class KioskTest extends TestCase
         $this->contractorWithConditionalCard();
 
         $screen = $this->screen()
-            ->call('start')->call('chooseType', 'contractor')
+            ->call('chooseType', 'contractor')
             ->set('details.first_name', 'Casey')->set('details.name', 'Contractor')
             ->call('submitDetails')
             ->set('hostQuery', 'Ada');
@@ -168,7 +168,7 @@ class KioskTest extends TestCase
     {
         $this->get('/kiosk')->assertRedirect(route('kiosk.enrol'));
         $this->withCookie(KioskDevices::COOKIE, str_repeat('x', 64))->get('/kiosk')->assertRedirect(route('kiosk.enrol'));
-        $this->withCookie(KioskDevices::COOKIE, $this->secret)->get('/kiosk')->assertOk()->assertSee(__('Willkommen'));
+        $this->withCookie(KioskDevices::COOKIE, $this->secret)->get('/kiosk')->assertOk()->assertSee(__('Gäste, bitte hier beginnen.'));
 
         app(KioskDevices::class)->revoke($this->kiosk);
 
@@ -176,6 +176,23 @@ class KioskTest extends TestCase
         // Component updates are re-checked too (persistent middleware), and refused outright.
         $this->withCookie(KioskDevices::COOKIE, $this->secret)->withHeader('X-Livewire', '1')->get('/kiosk')->assertForbidden();
         Livewire::withCookie(KioskDevices::COOKIE, $this->secret)->test(KioskScreen::class)->assertForbidden();
+    }
+
+    public function test_the_welcome_screen_lists_visitor_types_and_greets_by_time_of_day(): void
+    {
+        $this->contractorWithConditionalCard();
+        $this->site->update(['timezone' => 'Australia/Perth']);
+
+        $this->travelTo(now('Australia/Perth')->setTime(8, 30));
+        $this->screen()->assertSet('step', 'welcome')
+            ->assertSeeInOrder([__('Guten Morgen!'), __('Was führt Sie zu uns?'), 'Contractor', 'Visitor'])
+            ->call('chooseType', 'not-a-type')->assertHasErrors('type')->assertSet('step', 'welcome');
+
+        $this->travelTo(now('Australia/Perth')->setTime(18, 0));
+        $this->screen()->assertSee(__('Guten Abend!'));
+
+        VisitorType::query()->update(['is_active' => false]);
+        $this->screen()->assertSee(__('Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.'));
     }
 
     public function test_the_kiosk_device_check_runs_on_livewire_updates(): void
