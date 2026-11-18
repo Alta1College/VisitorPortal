@@ -1042,5 +1042,9 @@
     "Besucher automatisch abmelden um": "Déconnecter automatiquement les visiteurs à",
     "Uhrzeit (24 h, z. B. 18:00) in der Zeitzone des Standorts; wer dann noch angemeldet ist, wird abgemeldet. Pro Standort änderbar, „off“ schaltet es dort ab. Während einer Anwesenheitskontrolle wird niemand automatisch abgemeldet.": "Heure (24 h, p. ex. 18:00) dans le fuseau du site ; les personnes encore enregistrées sont alors déconnectées. Modifiable par site ; « off » le désactive. Personne n’est déconnecté pendant un appel.",
     ":count Stunde|:count Stunden": ":count heure|:count heures",
-    ":count Treffer|:count Treffer": ":count résultat|:count résultats"
+    ":count Treffer|:count Treffer": ":count résultat|:count résultats",
+    "Kamera öffnen": "Ouvrir la caméra",
+    "Foto aufnehmen": "Prendre la photo",
+    "Neu aufnehmen": "Reprendre",
+    "Die Kamera ist nicht verfügbar. Bitte nehmen Sie das Foto hier auf.": "La caméra n’est pas disponible. Veuillez prendre votre photo ici."
 }

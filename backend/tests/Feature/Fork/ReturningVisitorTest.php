@@ -244,6 +244,32 @@ class ReturningVisitorTest extends TestCase
         $this->withCookie(KioskDevices::COOKIE, $this->secret)->get(route('kiosk.returning-photo', ['token' => 'nope']))->assertNotFound();
     }
 
+    public function test_a_camera_snapshot_is_stored_as_the_photo(): void
+    {
+        // What the in-page camera sends: a JPEG data URL (a 1×1 image here).
+        $snapshot = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==';
+
+        $this->kiosk()->call('chooseType', 'contractor')->call('lookupReturning')
+            ->set('details.first_name', 'Cam')->set('details.name', 'Era')
+            ->set('details.phone', '0400 000 000')->set('details.company', 'Lens Co')
+            ->call('submitDetails')->assertSee(__('Kamera öffnen'))
+            ->set('answers.wwcc', 'W-9')->set('answers.reason', 'Testing')->set('answers.photo', $snapshot)
+            ->call('submitQuestions')->assertHasNoErrors()->assertSet('step', 'confirm')
+            ->call('finish')->assertSet('step', 'done');
+
+        $path = VisitResponse::query()->where('field_key', 'photo')->value('file_path');
+        $this->assertStringEndsWith('.jpg', $path);
+        Storage::disk(WorkflowRecorder::EVIDENCE_DISK)->assertExists($path);
+
+        // Anything that is not a real image is refused.
+        $this->kiosk()->call('chooseType', 'contractor')->call('lookupReturning')
+            ->set('details.first_name', 'Bad')->set('details.name', 'Data')
+            ->set('details.phone', '0400 000 001')->set('details.company', 'X')
+            ->call('submitDetails')
+            ->set('answers.wwcc', 'W-9')->set('answers.reason', 'Testing')->set('answers.photo', 'data:image/jpeg;base64,'.base64_encode('<script>no</script>'))
+            ->call('submitQuestions')->assertHasErrors('answers.photo');
+    }
+
     public function test_masks(): void
     {
         $this->assertSame('c•••@s•••.example', ReturningVisitors::maskEmail('casey@spark.example'));

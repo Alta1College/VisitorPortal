@@ -439,8 +439,9 @@ abstract class VisitorSignIn extends Component
         $prepared = [];
 
         foreach ($this->answers as $key => $value) {
-            if (is_string($value) && str_starts_with($value, 'data:image/png;base64,')) {
-                $value = $this->signatureFile($value);
+            // Signatures (drawing pad) and camera photos arrive as image data URLs.
+            if (is_string($value) && preg_match('#^data:image/(png|jpeg);base64,#', $value) === 1) {
+                $value = $this->dataUrlFile($value);
             }
 
             $prepared[$key] = $value;
@@ -449,18 +450,20 @@ abstract class VisitorSignIn extends Component
         return $prepared;
     }
 
-    private function signatureFile(string $dataUrl): ?UploadedFile
+    private function dataUrlFile(string $dataUrl): ?UploadedFile
     {
-        $binary = base64_decode(substr($dataUrl, strlen('data:image/png;base64,')), true);
+        $jpeg = str_starts_with($dataUrl, 'data:image/jpeg;');
+        $binary = base64_decode(substr($dataUrl, strpos($dataUrl, ',') + 1), true);
 
-        if ($binary === false || strlen($binary) > 2 * 1024 * 1024) {
+        // Content is checked again by the answer rules (SafeRasterImage, size).
+        if ($binary === false || strlen($binary) > 5 * 1024 * 1024) {
             return null;
         }
 
-        $path = tempnam(sys_get_temp_dir(), 'sig');
+        $path = tempnam(sys_get_temp_dir(), 'img');
         file_put_contents($path, $binary);
 
-        return new UploadedFile($path, 'signature.png', 'image/png', null, true);
+        return new UploadedFile($path, $jpeg ? 'photo.jpg' : 'signature.png', $jpeg ? 'image/jpeg' : 'image/png', null, true);
     }
 
     private function stepAfterHost(): string

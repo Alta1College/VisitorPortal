@@ -1042,5 +1042,9 @@
     "Besucher automatisch abmelden um": "Besucher automatisch abmelden um",
     "Uhrzeit (24 h, z. B. 18:00) in der Zeitzone des Standorts; wer dann noch angemeldet ist, wird abgemeldet. Pro Standort änderbar, „off“ schaltet es dort ab. Während einer Anwesenheitskontrolle wird niemand automatisch abgemeldet.": "Uhrzeit (24 h, z. B. 18:00) in der Zeitzone des Standorts; wer dann noch angemeldet ist, wird abgemeldet. Pro Standort änderbar, „off“ schaltet es dort ab. Während einer Anwesenheitskontrolle wird niemand automatisch abgemeldet.",
     ":count Stunde|:count Stunden": ":count Stunde|:count Stunden",
-    ":count Treffer|:count Treffer": ":count Treffer|:count Treffer"
+    ":count Treffer|:count Treffer": ":count Treffer|:count Treffer",
+    "Kamera öffnen": "Kamera öffnen",
+    "Foto aufnehmen": "Foto aufnehmen",
+    "Neu aufnehmen": "Neu aufnehmen",
+    "Die Kamera ist nicht verfügbar. Bitte nehmen Sie das Foto hier auf.": "Die Kamera ist nicht verfügbar. Bitte nehmen Sie das Foto hier auf."
 }

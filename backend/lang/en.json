@@ -1042,5 +1042,9 @@
     "Besucher automatisch abmelden um": "Sign visitors out automatically at",
     "Uhrzeit (24 h, z. B. 18:00) in der Zeitzone des Standorts; wer dann noch angemeldet ist, wird abgemeldet. Pro Standort änderbar, „off“ schaltet es dort ab. Während einer Anwesenheitskontrolle wird niemand automatisch abgemeldet.": "Time (24 h, e.g. 18:00) in the site’s timezone; anyone still signed in is signed out then. Can be changed per site; \"off\" turns it off there. Nobody is signed out automatically while a roll call is open.",
     ":count Stunde|:count Stunden": ":count hour|:count hours",
-    ":count Treffer|:count Treffer": ":count result|:count results"
+    ":count Treffer|:count Treffer": ":count result|:count results",
+    "Kamera öffnen": "Open camera",
+    "Foto aufnehmen": "Take photo",
+    "Neu aufnehmen": "Retake",
+    "Die Kamera ist nicht verfügbar. Bitte nehmen Sie das Foto hier auf.": "The camera is not available. Please take your photo here."
 }

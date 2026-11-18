@@ -234,6 +234,71 @@
                                     </select>
                                     @break
                                 @case(FormField::TYPE_PHOTO)
+                                    {{-- Camera, not an upload: a live preview where the browser allows it (HTTPS or
+                                         localhost), otherwise a file field that opens the camera directly. --}}
+                                    <div wire:ignore wire:key="camera-{{ $field->key }}" class="flex flex-col gap-3"
+                                         x-data="{
+                                            model: @js($model),
+                                            live: !!(window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                                            stream: null,
+                                            photo: null,
+                                            failed: false,
+                                            async open() {
+                                                try {
+                                                    this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
+                                                    this.$refs.video.srcObject = this.stream;
+                                                    await this.$refs.video.play();
+                                                } catch (e) {
+                                                    this.stop();
+                                                    this.failed = true;
+                                                    this.live = false;
+                                                }
+                                            },
+                                            snap() {
+                                                const v = this.$refs.video;
+                                                const cropH = Math.min(v.videoHeight, v.videoWidth * 4 / 3);
+                                                const cropW = cropH * 3 / 4;
+                                                const c = document.createElement('canvas');
+                                                c.width = 600; c.height = 800;
+                                                c.getContext('2d').drawImage(v, (v.videoWidth - cropW) / 2, (v.videoHeight - cropH) / 2, cropW, cropH, 0, 0, 600, 800);
+                                                this.photo = c.toDataURL('image/jpeg', 0.85);
+                                                this.stop();
+                                                $wire.set(this.model, this.photo, false);
+                                            },
+                                            retake() {
+                                                this.photo = null;
+                                                $wire.set(this.model, null, false);
+                                                this.open();
+                                            },
+                                            stop() {
+                                                if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+                                            },
+                                            destroy() { this.stop(); },
+                                         }">
+                                        <template x-if="live">
+                                            <div class="flex flex-col items-center gap-3">
+                                                <div class="relative aspect-[3/4] w-full max-w-xs overflow-hidden rounded-[1.5rem] bg-base-200">
+                                                    <video x-ref="video" x-show="stream && !photo" playsinline muted class="h-full w-full -scale-x-100 object-cover"></video>
+                                                    <img x-show="photo" :src="photo" alt="" class="h-full w-full object-cover">
+                                                    <div x-show="!stream && !photo" class="flex h-full w-full items-center justify-center text-base-content/60">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-20" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                                    </div>
+                                                </div>
+                                                <button type="button" x-show="!stream && !photo" x-on:click="open()" class="btn btn-primary kiosk-tap w-full max-w-xs">{{ __('Kamera öffnen') }}</button>
+                                                <button type="button" x-show="stream && !photo" x-on:click="snap()" class="btn btn-primary kiosk-tap w-full max-w-xs">{{ __('Foto aufnehmen') }}</button>
+                                                <button type="button" x-show="photo" x-on:click="retake()" class="btn btn-outline kiosk-tap w-full max-w-xs">{{ __('Neu aufnehmen') }}</button>
+                                            </div>
+                                        </template>
+                                        <template x-if="!live">
+                                            <div class="flex flex-col gap-2">
+                                                <p x-show="failed" class="text-warning">{{ __('Die Kamera ist nicht verfügbar. Bitte nehmen Sie das Foto hier auf.') }}</p>
+                                                <input type="file" x-on:change="$wire.upload(model, $event.target.files[0])" class="file-input file-input-bordered file-input-lg w-full"
+                                                       accept="image/jpeg,image/png,image/webp" capture="user">
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <span wire:loading wire:target="{{ $model }}" class="text-base-content">{{ __('Wird hochgeladen …') }}</span>
+                                    @break
                                 @case(FormField::TYPE_FILE)
                                     <input type="file" wire:model="{{ $model }}" class="file-input file-input-bordered file-input-lg w-full"
                                            accept="{{ $field->type === FormField::TYPE_PHOTO ? 'image/jpeg,image/png,image/webp' : 'application/pdf,image/jpeg,image/png,image/webp' }}"

@@ -1042,5 +1042,9 @@
     "Besucher automatisch abmelden um": "Automaticky odhlásit návštěvníky v",
     "Uhrzeit (24 h, z. B. 18:00) in der Zeitzone des Standorts; wer dann noch angemeldet ist, wird abgemeldet. Pro Standort änderbar, „off“ schaltet es dort ab. Während einer Anwesenheitskontrolle wird niemand automatisch abgemeldet.": "Čas (24 h, např. 18:00) v časovém pásmu lokality; kdo je stále přihlášen, bude odhlášen. Lze změnit pro každou lokalitu; „off“ to vypne. Během kontroly přítomnosti nikdo automaticky odhlášen není.",
     ":count Stunde|:count Stunden": ":count hodina|:count hodin",
-    ":count Treffer|:count Treffer": ":count výsledek|:count výsledků"
+    ":count Treffer|:count Treffer": ":count výsledek|:count výsledků",
+    "Kamera öffnen": "Otevřít kameru",
+    "Foto aufnehmen": "Vyfotit",
+    "Neu aufnehmen": "Vyfotit znovu",
+    "Die Kamera ist nicht verfügbar. Bitte nehmen Sie das Foto hier auf.": "Kamera není dostupná. Pořiďte prosím fotografii zde."
 }
