@@ -114,6 +114,7 @@ final class SettingsRegistry
             new SettingDefinition('organisation.visitor_experience.visitor_instructions', SettingDefinition::TYPE_TEXT, self::GROUP_VISITOR_EXPERIENCE, $string(2000), siteOverridable: true),
             new SettingDefinition('organisation.visitor_experience.sign_in_confirmation', SettingDefinition::TYPE_TEXT, self::GROUP_VISITOR_EXPERIENCE, $string(500)),
             new SettingDefinition('organisation.visitor_experience.sign_out_confirmation', SettingDefinition::TYPE_TEXT, self::GROUP_VISITOR_EXPERIENCE, $string(500)),
+            new SettingDefinition('organisation.visitor_experience.badge_footer', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(160), siteOverridable: true),
             new SettingDefinition('branding.monitor_fallback_heading', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(120)),
             new SettingDefinition('branding.monitor_fallback_subheading', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(200)),
             new SettingDefinition('organisation.reception_host_user_id', SettingDefinition::TYPE_USER, self::GROUP_VISITOR_EXPERIENCE,

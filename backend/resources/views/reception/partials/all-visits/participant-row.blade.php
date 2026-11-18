@@ -49,7 +49,14 @@
     </div>
 
     @if ($showParticipantControls)
-        <div class="flex min-w-0 items-center">
+        <div class="flex min-w-0 items-center gap-1">
+            @if ($participant['label_url'] ?? null)
+                {{-- Fork (Phase 8): print on the site's label printer. --}}
+                <form method="POST" action="{{ $participant['label_url'] }}" x-on:submit="$dispatch('av-capture-scroll')">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm w-auto justify-center px-2 text-center" data-testid="all-visits-participant-label-button">{{ __('Etikett') }}</button>
+                </form>
+            @endif
             @if ($canPrintBadge && $badgeUrl)
                 <form
                     method="POST"

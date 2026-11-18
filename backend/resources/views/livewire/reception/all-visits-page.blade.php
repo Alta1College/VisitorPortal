@@ -22,6 +22,8 @@
     x-on:av-capture-scroll.window="captureScroll()"
     x-effect="interactionToken; restoreScroll()"
 >
+    {{-- Fork (Phase 8): confirmation after sending a badge to the label printer. --}}
+    <x-bp.alert />
     <div class="grid min-w-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] content-start gap-[0.45rem] min-h-[calc(100dvh-7.35rem)] max-h-[calc(100dvh-7.35rem)] overflow-visible max-[1100px]:min-h-auto max-[1100px]:max-h-none">
         @include('reception.partials.all-visits.toolbar')
 

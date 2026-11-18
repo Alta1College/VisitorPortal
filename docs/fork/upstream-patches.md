@@ -23,3 +23,9 @@ upstream merges can be reviewed quickly. New files added by the fork are not lis
 | `visit_visitor` table (migration, no file edit) | Additive nullable columns `checked_in_via`, `checked_out_via` | Record the channel of each check-in/out | 4 | No |
 | `backend/bootstrap/providers.php` | Register `PublicVisitServiceProvider` | Public route group, rate limiters, host directory | 4 | No |
 | `visit_visitor` table (migration, no file edit) | Additive nullable column `kiosk_id` | Which kiosk recorded a sign-in | 5 | No |
+| `backend/bootstrap/providers.php` | Register `MessagingServiceProvider` and `BadgesServiceProvider` | Microsoft Graph mail; badge printing and reprint route | 7, 8 | No |
+| `backend/config/mail.php` | Additional `microsoft-graph` mailer entry | Microsoft 365 mail with OAuth | 7 | Could offer |
+| `backend/app/Livewire/Reception/{DashboardPage,AllVisitsPage}.php` | One extra `label_url` key in each participant row | Reception "Label" reprint button when the site has a label printer | 8 | No |
+| `backend/resources/views/livewire/reception/partials/dashboard-participant-row.blade.php`, `backend/resources/views/reception/partials/all-visits/participant-row.blade.php` | "Label" form button before upstream's PDF badge button (shown only with `label_url`) | Reprint on the label printer | 8 | No |
+| `backend/resources/views/livewire/reception/{dashboard-page,all-visits-page}.blade.php` | `<x-bp.alert />` (upstream component) at the top | Show "Printing on …" after a reprint | 8 | No |
+| `kiosks`, `visitor_types` tables (migration, no file edit) | Additive `kiosks.badge_printer_id`, `visitor_types.print_badge` | Which printer a kiosk uses; which types get a badge | 8 | No |

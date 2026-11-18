@@ -10,6 +10,7 @@ namespace App\PublicVisit\Commands;
 
 use App\Audit\AuditEvent;
 use App\Audit\AuditLogger;
+use App\Badges\BadgePrinting;
 use App\HostDirectory\HostDirectory;
 use App\Models\User;
 use App\Models\Visit;
@@ -146,7 +147,23 @@ class RegisterArrival
 
         $this->sendSignOutLink($request, $visitor, $token);
 
-        return new ArrivalResult($token, (string) $visitor->first_name, $this->displayName($host), false, $visit->getKey(), $visitor->getKey());
+        return new ArrivalResult($token, (string) $visitor->first_name, $this->displayName($host), false, $visit->getKey(), $visitor->getKey(), $this->queueBadge($request, $visit, $visitor));
+    }
+
+    /**
+     * Send the badge to the label printer in the background. A printing problem never affects
+     * the sign-in (brief §25).
+     */
+    private function queueBadge(ArrivalRequest $request, Visit $visit, Visitor $visitor): bool
+    {
+        try {
+            return app(BadgePrinting::class)->queueForArrival($request->site, $request->visitorType, $visit, $visitor, $request->kioskId);
+        } catch (Throwable $e) {
+            report($e);
+            $this->audit->record('badge.queue_failed', subject: $visit, site: $request->site, result: AuditEvent::RESULT_FAILURE, context: ['visitor_id' => $visitor->getKey()]);
+
+            return false;
+        }
     }
 
     /**

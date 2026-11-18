@@ -10,6 +10,13 @@
             @endif
         </div>
         <div class="flex flex-wrap gap-2">
+            @if ($participant['label_url'] ?? null)
+                {{-- Fork (Phase 8): print on the site's label printer. --}}
+                <form method="POST" action="{{ $participant['label_url'] }}">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-xs rounded-lg" data-testid="dashboard-participant-label-button">{{ __('Etikett') }}</button>
+                </form>
+            @endif
             @if ($participant['can_print_badge'])
                 <form method="POST" action="{{ $participant['badge_url'] }}" target="dashboard-badge-download-frame">
                     @csrf

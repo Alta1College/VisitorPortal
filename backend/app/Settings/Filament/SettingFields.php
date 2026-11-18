@@ -68,6 +68,7 @@ final class SettingFields
             'organisation.visitor_experience.visitor_instructions' => ['Hinweise für Besucher'],
             'organisation.visitor_experience.sign_in_confirmation' => ['Bestätigung nach der Anmeldung'],
             'organisation.visitor_experience.sign_out_confirmation' => ['Bestätigung nach der Abmeldung'],
+            'organisation.visitor_experience.badge_footer' => ['Hinweis unten auf dem Ausweis', 'Z. B. „Bitte sichtbar tragen und beim Gehen abgeben.“ Leer lassen für den Standardtext.'],
             'branding.monitor_fallback_heading' => ['Überschrift der Willkommensanzeige'],
             'branding.monitor_fallback_subheading' => ['Unterzeile der Willkommensanzeige'],
             'organisation.reception_host_user_id' => ['Empfangskontakt', 'Wird als Gastgeber eingetragen, wenn ein Besuchertyp keinen Gastgeber braucht oder der Besucher keinen auswählt, z. B. bei Lieferungen.'],

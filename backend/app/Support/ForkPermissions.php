@@ -28,6 +28,9 @@ final class ForkPermissions
 
     public const MANAGE_QR_CHECK_IN = 'Manage:QrCheckIn';
 
+    /** Set up network label printers for badges. */
+    public const MANAGE_BADGE_PRINTERS = 'Manage:BadgePrinters';
+
     public const ADMIN = [
         self::MANAGE_ORGANISATION_SETTINGS,
         self::MANAGE_SITE_SETTINGS,
@@ -35,5 +38,6 @@ final class ForkPermissions
         self::MANAGE_VISITOR_WORKFLOW,
         self::MANAGE_KIOSKS,
         self::MANAGE_QR_CHECK_IN,
+        self::MANAGE_BADGE_PRINTERS,
     ];
 }
