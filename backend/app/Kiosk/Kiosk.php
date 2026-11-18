@@ -8,6 +8,7 @@
 
 namespace App\Kiosk;
 
+use App\Badges\BadgePrinter;
 use App\Models\Site;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $revoked_at
  * @property bool $is_staffed
  * @property int $idle_timeout_seconds
+ * @property int|null $badge_printer_id
  */
 class Kiosk extends Model
 {
@@ -37,6 +39,7 @@ class Kiosk extends Model
         'name',
         'is_staffed',
         'idle_timeout_seconds',
+        'badge_printer_id',
     ];
 
     protected $hidden = [
@@ -61,6 +64,11 @@ class Kiosk extends Model
     public function site(): BelongsTo
     {
         return $this->belongsTo(Site::class);
+    }
+
+    public function badgePrinter(): BelongsTo
+    {
+        return $this->belongsTo(BadgePrinter::class);
     }
 
     public function scopeActive(Builder $query): Builder

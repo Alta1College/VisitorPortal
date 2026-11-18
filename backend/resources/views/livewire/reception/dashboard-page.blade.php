@@ -1,4 +1,6 @@
 <div class="grid min-w-0 gap-5" x-data>
+    {{-- Fork (Phase 8): confirmation after sending a badge to the label printer. --}}
+    <x-bp.alert />
     <section class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         @foreach ($stats as $stat)
             <article class="card rounded-[1.4rem] border border-base-300 bg-base-100 shadow-sm">

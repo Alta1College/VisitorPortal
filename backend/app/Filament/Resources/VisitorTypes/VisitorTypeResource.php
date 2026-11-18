@@ -95,6 +95,8 @@ class VisitorTypeResource extends Resource
                     ->helperText(__('Leer lassen, um den Typ an allen Standorten anzubieten.')),
                 TextInput::make('badge_label')->label(__('Bezeichnung auf dem Ausweis'))->maxLength(40),
                 ColorPicker::make('badge_color')->label(__('Farbe auf dem Ausweis'))->hex()->regex('/^#[0-9a-fA-F]{6}$/'),
+                Toggle::make('print_badge')->label(__('Ausweis drucken'))->default(true)
+                    ->helperText(__('Druckt bei der Anmeldung einen Ausweis, wenn am Kiosk oder Standort ein Etikettendrucker eingerichtet ist.')),
                 TextInput::make('sort_order')->label(__('Reihenfolge'))->integer()->minValue(0)->default(0),
                 Toggle::make('is_active')->label(__('Aktiv'))->default(true),
             ]),

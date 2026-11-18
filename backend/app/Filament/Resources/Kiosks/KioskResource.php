@@ -8,6 +8,7 @@
 
 namespace App\Filament\Resources\Kiosks;
 
+use App\Badges\BadgePrinter;
 use App\Filament\Resources\Kiosks\Pages\CreateKiosk;
 use App\Filament\Resources\Kiosks\Pages\EditKiosk;
 use App\Filament\Resources\Kiosks\Pages\ListKiosks;
@@ -27,6 +28,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -72,6 +74,7 @@ class KioskResource extends Resource
                     ->label(__('Standort'))
                     ->options(fn (): array => Site::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all())
                     ->required()
+                    ->live()
                     ->native(false),
                 TextInput::make('idle_timeout_seconds')
                     ->label(__('Zurücksetzen nach Inaktivität (Sekunden)'))
@@ -83,6 +86,13 @@ class KioskResource extends Resource
                 Toggle::make('is_staffed')
                     ->label(__('Am Empfang besetzt'))
                     ->helperText(__('Für die spätere Abmeldung am Kiosk: an besetzten Kiosks dürfen Namensvorschläge angezeigt werden.')),
+                Select::make('badge_printer_id')
+                    ->label(__('Etikettendrucker'))
+                    ->options(fn (Get $get): array => BadgePrinter::query()
+                        ->where('site_id', $get('site_id'))->orderBy('name')->pluck('name', 'id')->all())
+                    ->placeholder(__('Standarddrucker des Standorts'))
+                    ->helperText(__('Ausweise von diesem Kiosk werden hier gedruckt. Ohne Auswahl: der Standarddrucker des Standorts, falls vorhanden.'))
+                    ->native(false),
                 TextEntry::make('setup_warning')
                     ->hiddenLabel()
                     ->columnSpanFull()

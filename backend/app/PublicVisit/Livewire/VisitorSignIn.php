@@ -80,6 +80,9 @@ abstract class VisitorSignIn extends Component
 
     public ?string $doneHostName = null;
 
+    /** A badge is printing for the visitor who just signed in. */
+    public bool $doneBadge = false;
+
     /** The site the visitor is at; aborts if the channel is no longer valid. */
     abstract protected function site(): Site;
 
@@ -299,6 +302,7 @@ abstract class VisitorSignIn extends Component
 
         $this->doneFirstName = $result->visitorFirstName;
         $this->doneHostName = $result->hostDisplayName;
+        $this->doneBadge = $result->badgeQueued;
         $this->afterArrival($result);
         $this->clearReturning();
         $this->step = 'done';
@@ -312,7 +316,7 @@ abstract class VisitorSignIn extends Component
      */
     public function restart(): void
     {
-        $this->reset(['step', 'typeSlug', 'details', 'hostQuery', 'hostResults', 'hostToken', 'hostName', 'answers', 'accepted', 'doneFirstName', 'doneHostName', 'goodbyeName', 'lookupIdentifier']);
+        $this->reset(['step', 'typeSlug', 'details', 'hostQuery', 'hostResults', 'hostToken', 'hostName', 'answers', 'accepted', 'doneFirstName', 'doneHostName', 'doneBadge', 'goodbyeName', 'lookupIdentifier']);
         $this->clearReturning();
         $this->clearSignOut();
         $this->resetErrorBag();

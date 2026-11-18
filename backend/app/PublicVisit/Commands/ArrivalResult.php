@@ -23,5 +23,7 @@ final class ArrivalResult
         public readonly int $visitId,
         /** @internal */
         public readonly int $visitorId,
+        /** A badge was sent to a label printer for this sign-in. */
+        public readonly bool $badgeQueued = false,
     ) {}
 }

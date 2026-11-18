@@ -39,6 +39,7 @@ class VisitorType extends Model
         'slug',
         'description',
         'host_requirement',
+        'print_badge',
         'detail_fields',
         'badge_label',
         'badge_color',
@@ -48,12 +49,14 @@ class VisitorType extends Model
 
     protected $attributes = [
         'host_requirement' => self::HOST_OPTIONAL,
+        'print_badge' => true,
         'is_active' => true,
         'sort_order' => 0,
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'print_badge' => 'boolean',
         'sort_order' => 'integer',
         'detail_fields' => 'array',
     ];

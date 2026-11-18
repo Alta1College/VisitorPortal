@@ -8,6 +8,7 @@
 
 namespace App\Livewire\Reception;
 
+use App\Badges\BadgePrinting;
 use App\Enums\VisitStatusEnum;
 use App\Livewire\Concerns\RateLimitsSearch;
 use App\Models\User;
@@ -322,6 +323,8 @@ class AllVisitsPage extends Component
             'check_in_label' => $isCheckedOut ? __('Erneut einchecken') : __('Check-in'),
             'can_check_out' => $canOperate && filled($pivot->checked_in_at) && blank($pivot->checked_out_at),
             'badge_url' => route('reception.participants.badge', [$visit->id, $visitor->id]),
+            // Fork (Phase 8): send the badge to the site's label printer.
+            'label_url' => $canOperate && app(BadgePrinting::class)->siteHasPrinter($visit->site_id) ? route('reception.participants.label', [$visit->id, $visitor->id]) : null,
         ];
     }
 
