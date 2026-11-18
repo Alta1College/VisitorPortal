@@ -26,11 +26,12 @@ class ResponseValidator
     /**
      * @param  array<string, mixed>  $answers  keyed by field key
      * @param  list<int>  $acceptedPolicyVersionIds
+     * @param  bool  $checkPolicies  false to validate answers only (a screen's questions step)
      * @return ValidatedWorkflow answers of visible fields only, normalised
      *
      * @throws ValidationException errors keyed answers.<field key> and policies.<policy id>
      */
-    public function validate(WorkflowDefinition $definition, array $answers, array $acceptedPolicyVersionIds): ValidatedWorkflow
+    public function validate(WorkflowDefinition $definition, array $answers, array $acceptedPolicyVersionIds, bool $checkPolicies = true): ValidatedWorkflow
     {
         $visible = $this->conditions->visibleKeys($definition, $answers);
         $rules = [];
@@ -50,7 +51,7 @@ class ResponseValidator
         $accepted = array_map('intval', $acceptedPolicyVersionIds);
         $policyErrors = [];
 
-        foreach ($definition->policies as $version) {
+        foreach ($checkPolicies ? $definition->policies : [] as $version) {
             if (! in_array($version->getKey(), $accepted, true)) {
                 $policyErrors['policies.'.$version->policy_id] = __(':policy muss akzeptiert werden.', ['policy' => $version->title]);
             }

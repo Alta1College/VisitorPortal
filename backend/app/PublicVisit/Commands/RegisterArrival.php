@@ -15,10 +15,10 @@ use App\Models\User;
 use App\Models\Visit;
 use App\Models\Visitor;
 use App\PublicVisit\AttendanceTokens;
+use App\PublicVisit\VisitorDetails;
 use App\Services\VisitActionService;
 use App\Services\WalkInVisitService;
 use App\Settings\SettingsRepository;
-use App\Support\VisitorContactRequirement;
 use App\VisitorWorkflow\Models\VisitorType;
 use App\VisitorWorkflow\ResponseValidator;
 use App\VisitorWorkflow\WorkflowRecorder;
@@ -26,7 +26,6 @@ use App\VisitorWorkflow\WorkflowResolver;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Throwable;
@@ -70,7 +69,7 @@ class RegisterArrival
             throw ValidationException::withMessages(['visitor_type' => __('Dieser Besuchertyp ist hier nicht verfügbar.')]);
         }
 
-        $details = $this->validateDetails($request->details);
+        $details = $this->validateDetails($request->details, $request->visitorType);
         $host = $this->resolveHost($request);
         $workflow = $this->validator->validate($definition, $request->answers, $request->acceptedPolicyVersionIds);
 
@@ -93,7 +92,7 @@ class RegisterArrival
                 DB::table('visit_visitor')
                     ->where('visit_id', $visit->getKey())
                     ->where('visitor_id', $visitor->getKey())
-                    ->update(['checked_in_via' => $request->channel->value]);
+                    ->update(['checked_in_via' => $request->channel->value, 'kiosk_id' => $request->kioskId]);
 
                 $this->recorder->record($visit, $visitor, $workflow, $request->channel->value);
 
@@ -170,48 +169,9 @@ class RegisterArrival
      * @param  array<string, mixed>  $details
      * @return array{first_name: string, name: string, email: ?string, phone: ?string, company: ?string}
      */
-    private function validateDetails(array $details): array
+    private function validateDetails(array $details, VisitorType $type): array
     {
-        $rules = [
-            'first_name' => ['required', 'string', 'max:100'],
-            'name' => ['required', 'string', 'max:100'],
-            'email' => ['nullable', 'string', 'email:rfc', 'max:191'],
-            'phone' => ['nullable', 'string', 'max:40', 'regex:/^[0-9+()\s.\-\/]{3,40}$/'],
-            'company' => ['nullable', 'string', 'max:150'],
-        ];
-
-        $requirement = VisitorContactRequirement::current();
-
-        if (VisitorContactRequirement::requiresEmail($requirement)) {
-            $rules['email'][0] = 'required';
-        }
-
-        if (VisitorContactRequirement::requiresPhone($requirement)) {
-            $rules['phone'][0] = 'required';
-        }
-
-        if (VisitorContactRequirement::requiresOne($requirement)) {
-            $rules['email'][] = 'required_without:phone';
-            $rules['phone'][] = 'required_without:email';
-        }
-
-        $input = array_map(fn ($v) => is_string($v) ? (trim($v) === '' ? null : trim($v)) : $v, array_intersect_key($details, $rules));
-
-        $validated = Validator::make($input, $rules, [], [
-            'first_name' => __('Vorname'),
-            'name' => __('Nachname'),
-            'email' => __('E-Mail'),
-            'phone' => __('Telefon'),
-            'company' => __('Firma'),
-        ])->validate();
-
-        return [
-            'first_name' => $validated['first_name'],
-            'name' => $validated['name'],
-            'email' => isset($validated['email']) ? mb_strtolower($validated['email']) : null,
-            'phone' => $validated['phone'] ?? null,
-            'company' => $validated['company'] ?? null,
-        ];
+        return VisitorDetails::validate($details, $type);
     }
 
     private function resolveHost(ArrivalRequest $request): User

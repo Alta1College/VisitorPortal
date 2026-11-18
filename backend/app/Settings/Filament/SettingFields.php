@@ -50,8 +50,16 @@ final class SettingFields
             'organisation.colors.foreground' => ['Vordergrundfarbe', 'Textfarbe im hellen Design.'],
             'organisation.colors.background' => ['Hintergrundfarbe', 'Seitenhintergrund im hellen Design. Wird nur angewendet, wenn Vorder- und Hintergrundfarbe gut lesbar sind.'],
             'branding.badge_accent_color' => ['Akzentfarbe des Besucherausweises'],
-            'organisation.visitor_experience.welcome_heading' => ['Begrüßungsüberschrift'],
+            'organisation.visitor_experience.welcome_heading' => ['Begrüßungsüberschrift', 'Am Kiosk unter dem tageszeitabhängigen Gruß („Guten Morgen!“). Leer: „Gäste, bitte hier beginnen.“'],
             'organisation.visitor_experience.welcome_message' => ['Begrüßungstext'],
+            'organisation.visitor_experience.visitor_type_question' => ['Frage nach dem Besuchertyp', 'Steht am Kiosk über den Besuchertypen. Leer: „Was führt Sie zu uns?“'],
+            'organisation.visitor_experience.show_greeting' => ['Tageszeitabhängigen Gruß anzeigen', '„Guten Morgen!“, „Guten Tag!“ oder „Guten Abend!“ über der Begrüßungsüberschrift am Kiosk. Standard: Ja.'],
+            'organisation.visitor_experience.heading_details' => ['Überschrift: Angaben', 'Leer: „Ihre Angaben“'],
+            'organisation.visitor_experience.heading_host' => ['Überschrift: Gastgeber', 'Leer: „Wen besuchen Sie?“'],
+            'organisation.visitor_experience.heading_questions' => ['Überschrift: Fragen', 'Leer: „Ein paar Fragen“'],
+            'organisation.visitor_experience.heading_policies' => ['Überschrift: Richtlinien', 'Leer: „Bitte lesen und bestätigen“'],
+            'organisation.visitor_experience.heading_confirm' => ['Überschrift: Bestätigen', 'Leer: „Alles richtig?“'],
+            'organisation.visitor_experience.heading_done' => ['Überschrift nach der Anmeldung', 'Leer: „Danke, :name!“. :name wird durch den Vornamen ersetzt.'],
             'organisation.visitor_experience.sign_in_label' => ['Beschriftung „Anmelden“'],
             'organisation.visitor_experience.sign_out_label' => ['Beschriftung „Abmelden“'],
             'organisation.visitor_experience.visitor_instructions' => ['Hinweise für Besucher'],
@@ -86,6 +94,7 @@ final class SettingFields
             SettingDefinition::TYPE_INTEGER => TextInput::make($definition->field())->integer(),
             SettingDefinition::TYPE_LOCALE => Select::make($definition->field())->options(self::localeOptions())->native(false),
             SettingDefinition::TYPE_IMAGE => self::imageUpload($definition),
+            SettingDefinition::TYPE_YES_NO => Select::make($definition->field())->options(['1' => __('Ja'), '0' => __('Nein')])->native(false),
             SettingDefinition::TYPE_USER => Select::make($definition->field())
                 ->options(fn (): array => User::query()->where('is_active', true)->orderBy('first_name')->orderBy('name')
                     ->get(['id', 'first_name', 'name'])

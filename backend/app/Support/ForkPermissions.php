@@ -23,10 +23,14 @@ final class ForkPermissions
     /** Visitor types, form fields and policies. */
     public const MANAGE_VISITOR_WORKFLOW = 'Manage:VisitorWorkflow';
 
+    /** Register, set up and revoke kiosk devices. */
+    public const MANAGE_KIOSKS = 'Manage:Kiosks';
+
     public const ADMIN = [
         self::MANAGE_ORGANISATION_SETTINGS,
         self::MANAGE_SITE_SETTINGS,
         self::VIEW_AUDIT_EVENTS,
         self::MANAGE_VISITOR_WORKFLOW,
+        self::MANAGE_KIOSKS,
     ];
 }
