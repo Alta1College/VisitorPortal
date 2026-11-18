@@ -44,7 +44,7 @@
             @if ($types === [])
                 <p class="mt-10 max-w-xl text-2xl font-semibold">{{ __('Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.') }}</p>
             @else
-                <p class="mt-6 text-xl font-bold sm:text-2xl">{{ __('Was führt Sie zu uns?') }}</p>
+                <p class="mt-5 text-lg font-semibold sm:text-xl">{{ $typeQuestion }}</p>
                 <div @class(['mt-8 gap-5', 'flex flex-col items-start' => count($types) <= 5, 'grid grid-cols-1 sm:grid-cols-2' => count($types) > 5])>
                     @foreach ($types as $type)
                         <button type="button" wire:key="type-{{ $type->slug }}" wire:click="chooseType('{{ $type->slug }}')"

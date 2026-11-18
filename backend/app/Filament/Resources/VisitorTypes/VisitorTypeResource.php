@@ -82,7 +82,7 @@ class VisitorTypeResource extends Resource
                 Select::make('host_requirement')
                     ->label(__('Gastgeber'))
                     ->options(VisitorType::hostRequirements())
-                    ->default(VisitorType::HOST_REQUIRED)
+                    ->default(VisitorType::HOST_OPTIONAL)
                     ->required()
                     ->native(false),
                 Select::make('sites')

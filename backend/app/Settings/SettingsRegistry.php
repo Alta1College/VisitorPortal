@@ -98,6 +98,7 @@ final class SettingsRegistry
             // Visitor experience
             new SettingDefinition('organisation.visitor_experience.welcome_heading', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(120), siteOverridable: true),
             new SettingDefinition('organisation.visitor_experience.welcome_message', SettingDefinition::TYPE_TEXT, self::GROUP_VISITOR_EXPERIENCE, $string(1000), siteOverridable: true),
+            new SettingDefinition('organisation.visitor_experience.visitor_type_question', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(120), siteOverridable: true),
             new SettingDefinition('organisation.visitor_experience.sign_in_label', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(60)),
             new SettingDefinition('organisation.visitor_experience.sign_out_label', SettingDefinition::TYPE_STRING, self::GROUP_VISITOR_EXPERIENCE, $string(60)),
             new SettingDefinition('organisation.visitor_experience.visitor_instructions', SettingDefinition::TYPE_TEXT, self::GROUP_VISITOR_EXPERIENCE, $string(2000), siteOverridable: true),

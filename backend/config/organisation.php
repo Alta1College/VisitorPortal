@@ -40,6 +40,7 @@ return [
     'visitor_experience' => [
         'welcome_heading' => env('VISITOR_WELCOME_HEADING'),
         'welcome_message' => env('VISITOR_WELCOME_MESSAGE'),
+        'visitor_type_question' => env('VISITOR_TYPE_QUESTION'),
         'sign_in_label' => env('VISITOR_SIGN_IN_LABEL'),
         'sign_out_label' => env('VISITOR_SIGN_OUT_LABEL'),
         'visitor_instructions' => env('VISITOR_INSTRUCTIONS'),

@@ -269,6 +269,7 @@ class KioskScreen extends Component
             'greeting' => $this->greeting($site),
             'welcomeHeading' => $settings->get('organisation.visitor_experience.welcome_heading') ?: __('Gäste, bitte hier beginnen.'),
             'welcomeMessage' => $settings->get('organisation.visitor_experience.welcome_message'),
+            'typeQuestion' => $settings->get('organisation.visitor_experience.visitor_type_question') ?: __('Was führt Sie zu uns?'),
             'instructions' => $settings->get('organisation.visitor_experience.visitor_instructions'),
             // Own key: upstream translates "Anmelden" as the staff "Login".
             'signInLabel' => config('organisation.visitor_experience.sign_in_label') ?: __('Jetzt anmelden'),

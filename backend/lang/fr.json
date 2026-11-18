@@ -866,5 +866,8 @@
     "Gäste, bitte hier beginnen.": "Visiteurs, commencez ici.",
     "Guten Morgen!": "Bonjour !",
     "Guten Tag!": "Bon après-midi !",
-    "Guten Abend!": "Bonsoir !"
+    "Guten Abend!": "Bonsoir !",
+    "Am Kiosk unter dem tageszeitabhängigen Gruß („Guten Morgen!“). Leer: „Gäste, bitte hier beginnen.“": "Sur la borne, sous la salutation selon l'heure (« Bonjour ! »). Vide : « Visiteurs, commencez ici. »",
+    "Frage nach dem Besuchertyp": "Question sur le type de visiteur",
+    "Steht am Kiosk über den Besuchertypen. Leer: „Was führt Sie zu uns?“": "Affichée sur la borne au-dessus des types de visiteurs. Vide : « Quel est l’objet de votre visite ? »"
 }

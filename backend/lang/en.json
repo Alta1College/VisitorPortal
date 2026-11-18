@@ -868,5 +868,8 @@
     "Gäste, bitte hier beginnen.": "Guests, start here.",
     "Guten Morgen!": "Good morning!",
     "Guten Tag!": "Good afternoon!",
-    "Guten Abend!": "Good evening!"
+    "Guten Abend!": "Good evening!",
+    "Am Kiosk unter dem tageszeitabhängigen Gruß („Guten Morgen!“). Leer: „Gäste, bitte hier beginnen.“": "On the kiosk, below the time-of-day greeting (\"Good morning!\"). Empty: \"Guests, start here.\"",
+    "Frage nach dem Besuchertyp": "Visitor type question",
+    "Steht am Kiosk über den Besuchertypen. Leer: „Was führt Sie zu uns?“": "Shown on the kiosk above the visitor types. Empty: \"What brings you here?\""
 }

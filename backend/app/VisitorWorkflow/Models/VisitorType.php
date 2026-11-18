@@ -45,7 +45,7 @@ class VisitorType extends Model
     ];
 
     protected $attributes = [
-        'host_requirement' => self::HOST_REQUIRED,
+        'host_requirement' => self::HOST_OPTIONAL,
         'is_active' => true,
         'sort_order' => 0,
     ];

@@ -191,8 +191,23 @@ class KioskTest extends TestCase
         $this->travelTo(now('Australia/Perth')->setTime(18, 0));
         $this->screen()->assertSee(__('Guten Abend!'));
 
+        app(SettingsRepository::class)->saveSite($this->site, ['organisation.visitor_experience.visitor_type_question' => 'Why are you here today?'], null);
+        $this->screen()->assertSee('Why are you here today?')->assertDontSee(__('Was führt Sie zu uns?'));
+
         VisitorType::query()->update(['is_active' => false]);
         $this->screen()->assertSee(__('Die Anmeldung ist hier gerade nicht möglich. Bitte wenden Sie sich an den Empfang.'));
+    }
+
+    public function test_new_visitor_types_let_visitors_skip_the_host(): void
+    {
+        $type = VisitorType::query()->create(['name' => 'Visitor', 'slug' => 'visitor']);
+        $this->assertSame(VisitorType::HOST_OPTIONAL, $type->host_requirement);
+
+        $this->screen()
+            ->call('chooseType', 'visitor')
+            ->set('details.first_name', 'Sam')->set('details.name', 'Unsure')
+            ->call('submitDetails')->assertSet('step', 'host')->assertSee(__('Ich weiß es nicht'))
+            ->call('skipHost')->assertSet('step', 'confirm');
     }
 
     public function test_the_kiosk_device_check_runs_on_livewire_updates(): void

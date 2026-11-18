@@ -23,14 +23,18 @@ The kiosk page warns when its site offers a visitor type without a required host
 ## Visitor flow
 
 Welcome screen, laid out for tablets (iPad portrait and landscape): logo, a time-of-day greeting
-in the site's timezone, the welcome heading (default "Guests, start here."), "What brings you
-here?" and one pill per visitor type in the primary colour. Tapping a type starts the sign-in;
+in the site's timezone (automatic), the welcome heading (default "Guests, start here."), the
+visitor type question (default "What brings you here?") and one pill per visitor type in the
+primary colour. Heading, message and question are in Settings → Visitor experience, per site if
+needed; visitor types, their host requirement, questions and policies in Visitor workflow. Type
+is SF Pro Rounded on iPad (`ui-rounded`), the system font elsewhere. Tapping a type starts the sign-in;
 there is no separate "Sign in" step. Pill text uses the organisation's background colour and all
 text the foreground colour (`.brand-on-primary` in `/brand.css`), so the kiosk shows brand colours
 only. The bottom-right corner is kept for the mobile check-in QR code (Phase 6).
 
 Then details (contact requirement from upstream's setting) → host search
-(skipped for "no host" types; optional types offer "I don't know") → questions (conditional
+(skipped for "no host" types; optional types, the default for new types, offer "I don't
+know" and record the reception contact) → questions (conditional
 fields appear live; photo/file uploads; signature pad) → policies (rendered text + acceptance)
 → confirm → done: "Thank you, *first name*. *Host* has been told you have arrived." The screen
 clears itself 10 s after success and after the configured inactivity time on any other step;

@@ -868,5 +868,8 @@
     "Gäste, bitte hier beginnen.": "Gäste, bitte hier beginnen.",
     "Guten Morgen!": "Guten Morgen!",
     "Guten Tag!": "Guten Tag!",
-    "Guten Abend!": "Guten Abend!"
+    "Guten Abend!": "Guten Abend!",
+    "Am Kiosk unter dem tageszeitabhängigen Gruß („Guten Morgen!“). Leer: „Gäste, bitte hier beginnen.“": "Am Kiosk unter dem tageszeitabhängigen Gruß („Guten Morgen!“). Leer: „Gäste, bitte hier beginnen.“",
+    "Frage nach dem Besuchertyp": "Frage nach dem Besuchertyp",
+    "Steht am Kiosk über den Besuchertypen. Leer: „Was führt Sie zu uns?“": "Steht am Kiosk über den Besuchertypen. Leer: „Was führt Sie zu uns?“"
 }
