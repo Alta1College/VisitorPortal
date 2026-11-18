@@ -89,34 +89,65 @@
     <main class="mx-auto mt-6 flex w-full max-w-3xl flex-1 flex-col rounded-[2rem] bg-base-100 p-6 shadow-sm sm:p-10">
         <div class="flex flex-1 flex-col gap-8">
 
-            @if ($step === 'details')
+            @if ($step === 'identify')
+                @php($identifyLabel = count($identifyFields) === 2 ? __('E-Mail oder Handynummer') : ($detailLabels[$identifyFields[0] ?? 'email'] ?? __('E-Mail oder Handynummer')))
+                <h1 class="kiosk-title">{{ $identifyLabel }}</h1>
+                <p class="text-lg">{{ __('Waren Sie schon einmal hier, füllen wir Ihre Angaben aus.') }}</p>
+                <form wire:submit="lookupReturning" class="grid gap-4">
+                    <input type="{{ $identifyFields === ['phone'] ? 'tel' : 'text' }}" inputmode="{{ $identifyFields === ['phone'] ? 'tel' : 'email' }}"
+                           autocomplete="off" autocapitalize="off" spellcheck="false" wire:model="lookupIdentifier" aria-label="{{ $identifyLabel }}"
+                           class="input input-bordered kiosk-field w-full" autofocus>
+                    @error('lookup')<p class="text-lg text-error">{{ $message }}</p>@enderror
+                    <div class="flex gap-3">
+                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
+                        <button type="submit" class="btn btn-primary kiosk-tap flex-1" wire:loading.attr="disabled">{{ __('Weiter') }}</button>
+                    </div>
+                </form>
+
+            @elseif ($step === 'details')
                 <h1 class="kiosk-title">{{ $headings['details'] }}</h1>
 
                 @if ($pendingReturningToken)
-                    {{-- Masked summary only: the visitor confirms before saved details are used. --}}
+                    {{-- Saved values on the kiosk, a masked summary on phones; the visitor confirms first. --}}
                     <div class="flex flex-col gap-4 rounded-[1.5rem] border-2 border-primary p-5">
-                        <p class="text-2xl font-bold">{{ __('Willkommen zurück, :name!', ['name' => $returningSummary['first_name'] ?? '']) }}</p>
-                        <ul class="text-lg">
-                            <li>{{ trim(($returningSummary['first_name'] ?? '').' '.($returningSummary['last_name'] ?? '')) }}</li>
-                            @if ($returningSummary['email'] ?? null)<li>{{ $returningSummary['email'] }}</li>@endif
-                            @if ($returningSummary['phone'] ?? null)<li>{{ $returningSummary['phone'] }}</li>@endif
-                            @if ($returningSummary['company'] ?? false)<li>{{ __('Firma gespeichert') }}</li>@endif
-                        </ul>
+                        <div class="flex items-center gap-5">
+                            @if ($returningPhoto)
+                                <img src="{{ $returningPhoto }}" alt="" class="h-24 w-24 shrink-0 rounded-full object-cover">
+                            @endif
+                            <div>
+                                <p class="text-2xl font-bold">{{ __('Willkommen zurück, :name!', ['name' => $returningSummary['first_name'] ?? '']) }}</p>
+                                <ul class="text-lg">
+                                    <li>{{ trim(($returningSummary['first_name'] ?? '').' '.($returningSummary['last_name'] ?? '')) }}</li>
+                                    @if ($returningSummary['email'] ?? null)<li>{{ $returningSummary['email'] }}</li>@endif
+                                    @if ($returningSummary['phone'] ?? null)<li>{{ $returningSummary['phone'] }}</li>@endif
+                                    @if ($returningSummary['company'] ?? null)<li>{{ $returningSummary['company'] }}</li>@endif
+                                </ul>
+                            </div>
+                        </div>
                         <div class="flex flex-wrap gap-3">
-                            <button type="button" wire:click="confirmReturning" class="btn btn-primary kiosk-tap flex-1">{{ __('Gespeicherte Angaben verwenden') }}</button>
-                            @if ($mode === 'mobile')
+                            <button type="button" wire:click="confirmReturning" class="btn btn-primary kiosk-tap flex-1">{{ __('Das bin ich') }}</button>
+                            @if ($mode === 'mobile' && $rememberedOffer)
                                 <button type="button" wire:click="forgetMe" class="btn btn-ghost kiosk-tap">{{ __('Nicht ich – vergessen') }}</button>
                             @else
                                 <button type="button" wire:click="declineReturning" class="btn btn-ghost kiosk-tap">{{ __('Das bin ich nicht') }}</button>
                             @endif
                         </div>
                     </div>
-                @elseif ($returningEnabled && ! $returningToken && $mode === 'kiosk')
-                    <button type="button" wire:click="startReturning" class="btn btn-outline kiosk-tap self-start border-2">{{ __('Schon einmal hier gewesen?') }}</button>
                 @endif
 
                 @if ($returningToken)
-                    <p class="rounded-box bg-base-200 p-4 text-lg">{{ __('Ihre gespeicherten Angaben werden verwendet. Leere Felder behalten den gespeicherten Wert; tragen Sie etwas ein, um es zu ändern.') }}</p>
+                    <div class="flex items-center gap-4 rounded-box bg-base-200 p-4">
+                        @if ($returningPhoto)
+                            <img src="{{ $returningPhoto }}" alt="" class="h-14 w-14 shrink-0 rounded-full object-cover">
+                        @endif
+                        <p class="text-lg">
+                            @if ($mode === 'kiosk')
+                                {{ __('Ihre gespeicherten Angaben sind eingetragen. Bitte prüfen und bei Bedarf ändern.') }}
+                            @else
+                                {{ __('Ihre gespeicherten Angaben werden verwendet. Leere Felder behalten den gespeicherten Wert; tragen Sie etwas ein, um es zu ändern.') }}
+                            @endif
+                        </p>
+                    </div>
                 @endif
 
                 <form wire:submit="submitDetails" class="grid gap-4 sm:grid-cols-2">
@@ -166,6 +197,17 @@
                                 <span class="text-xl font-semibold">{{ $field->label }}@if ($field->is_required_here) *@endif</span>
                             @endif
                             @if ($field->help_text)<span class="text-base-content">{{ $field->help_text }}</span>@endif
+                            @php($savedHere = in_array($field->key, $savedAnswerKeys, true))
+                            @if ($savedHere && in_array($field->type, FormField::FILE_TYPES, true))
+                                <div class="flex items-center gap-4 rounded-box bg-base-200 p-3">
+                                    @if ($savedPhotos[$field->key] ?? null)
+                                        <img src="{{ $savedPhotos[$field->key] }}" alt="" class="h-20 w-20 shrink-0 rounded-box object-cover">
+                                    @endif
+                                    <span class="text-lg">{{ $field->type === FormField::TYPE_PHOTO ? __('Ihr gespeichertes Foto wird verwendet. Nehmen Sie ein neues auf, um es zu ersetzen.') : __('Ihre gespeicherte Datei wird verwendet. Laden Sie eine neue hoch, um sie zu ersetzen.') }}</span>
+                                </div>
+                            @elseif ($savedHere)
+                                <span class="text-base-content">{{ __('Gespeichert – leer lassen, um die gespeicherte Antwort zu verwenden.') }}</span>
+                            @endif
 
                             @switch($field->type)
                                 @case(FormField::TYPE_LONG_TEXT)
@@ -220,7 +262,7 @@
                                     @break
                                 @default
                                     <input type="{{ match ($field->type) { FormField::TYPE_EMAIL => 'email', FormField::TYPE_PHONE => 'tel', FormField::TYPE_NUMBER => 'number', FormField::TYPE_DATE => 'date', default => 'text' } }}"
-                                           wire:model.blur="{{ $model }}" class="input input-bordered kiosk-field w-full">
+                                           wire:model.blur="{{ $model }}" class="input input-bordered kiosk-field w-full" @if ($savedHere) placeholder="{{ __('Gespeichert') }}" @endif>
                             @endswitch
 
                             @error($model)<span class="text-error">{{ $message }}</span>@enderror
@@ -257,7 +299,10 @@
                 <h1 class="kiosk-title">{{ $headings['confirm'] }}</h1>
                 <dl class="grid gap-3 text-xl sm:grid-cols-[auto_1fr]">
                     <dt class="text-base-content">{{ __('Name') }}</dt>
-                    <dd class="font-medium">{{ trim(($details['first_name'] ?? '').' '.($details['name'] ?? '')) }}</dd>
+                    <dd class="flex items-center gap-3 font-medium">
+                        @if ($returningPhoto)<img src="{{ $returningPhoto }}" alt="" class="h-12 w-12 rounded-full object-cover">@endif
+                        {{ trim(($details['first_name'] ?: ($returningSummary['first_name'] ?? '')).' '.($details['name'] ?: ($returningSummary['last_name'] ?? ''))) }}
+                    </dd>
                     @if ($visitorType)
                         <dt class="text-base-content">{{ __('Besuchertyp') }}</dt>
                         <dd class="font-medium">{{ $visitorType->name }}</dd>
@@ -282,24 +327,6 @@
                     </button>
                 </div>
 
-            @elseif ($step === 'returning')
-                <h1 class="kiosk-title">{{ __('Schon einmal hier gewesen?') }}</h1>
-                <p class="text-lg">{{ __('Geben Sie Ihre E-Mail-Adresse oder Handynummer und Ihren Nachnamen ein, genau wie beim letzten Besuch.') }}</p>
-                <form wire:submit="lookupReturning" class="grid gap-4">
-                    <label class="form-control">
-                        <span class="mb-2 block text-lg font-semibold">{{ __('E-Mail oder Handynummer') }}</span>
-                        <input type="text" inputmode="email" autocomplete="off" wire:model="lookupIdentifier" class="input input-bordered kiosk-field w-full">
-                    </label>
-                    <label class="form-control">
-                        <span class="mb-2 block text-lg font-semibold">{{ __('Nachname') }}</span>
-                        <input type="text" autocomplete="off" wire:model="lookupLastName" class="input input-bordered kiosk-field w-full">
-                    </label>
-                    @error('lookup')<p class="text-lg text-error">{{ $message }}</p>@enderror
-                    <div class="flex gap-3">
-                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
-                        <button type="submit" class="btn btn-primary kiosk-tap flex-1" wire:loading.attr="disabled">{{ __('Suchen') }}</button>
-                    </div>
-                </form>
 
             @elseif ($step === 'signout')
                 <h1 class="kiosk-title">{{ $signOutLabel }}</h1>

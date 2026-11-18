@@ -80,7 +80,9 @@ class RegisterArrival
         $typed = $returning !== null ? $this->returning->merge($returning, $request->details) : $request->details;
         $details = $this->validateDetails($typed, $request->visitorType);
         $host = $this->resolveHost($request);
-        $workflow = $this->validator->validate($definition, $request->answers, $request->acceptedPolicyVersionIds);
+        // Remembered answers (and photos) fill questions the returning visitor left empty.
+        $answers = $returning !== null ? $this->returning->mergeAnswers($returning, $definition, $request->answers) : $request->answers;
+        $workflow = $this->validator->validate($definition, $answers, $request->acceptedPolicyVersionIds);
 
         try {
             [$visit, $visitor, $token] = DB::transaction(function () use ($request, $details, $host, $workflow, $keyHash, $returning): array {

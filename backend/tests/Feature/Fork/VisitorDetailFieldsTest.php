@@ -116,7 +116,7 @@ class VisitorDetailFieldsTest extends TestCase
 
         Livewire::withCookie(KioskDevices::COOKIE, $secret)->test(KioskScreen::class)
             ->assertDontSee(__('Guten Morgen!'))->assertDontSee(__('Guten Tag!'))->assertDontSee(__('Guten Abend!'))
-            ->call('chooseType', 'parent')
+            ->call('chooseType', 'parent')->call('lookupReturning')
             ->assertSee('About you')->assertSee('Mobile')->assertSee('Family name')->assertDontSee(__('Firma'))
             ->set('details.first_name', 'Pat')->set('details.name', 'Parent')
             ->call('submitDetails')->assertHasErrors('details.phone')

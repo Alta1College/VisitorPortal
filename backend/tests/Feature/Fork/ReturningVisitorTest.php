@@ -18,12 +18,18 @@ use App\PublicVisit\ReturningVisitors;
 use App\QrCheckIn\Livewire\MobileSignIn;
 use App\QrCheckIn\SiteQrLinks;
 use App\Settings\SettingsRepository;
+use App\VisitorWorkflow\Models\FormField;
+use App\VisitorWorkflow\Models\FormFieldAssignment;
 use App\VisitorWorkflow\Models\VisitorType;
+use App\VisitorWorkflow\Models\VisitResponse;
+use App\VisitorWorkflow\WorkflowRecorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -31,11 +37,11 @@ class ReturningVisitorTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
     private Site $site;
 
     private string $secret;
-
-    private Visitor $visitor;
 
     protected function setUp(): void
     {
@@ -43,18 +49,25 @@ class ReturningVisitorTest extends TestCase
 
         Notification::fake();
         Mail::fake();
+        Storage::fake(WorkflowRecorder::EVIDENCE_DISK);
         $this->site = Site::factory()->create();
         $reception = User::factory()->create(['site_id' => $this->site->getKey(), 'is_active' => true]);
         app(SettingsRepository::class)->saveSite($this->site, ['organisation.reception_host_user_id' => $reception->getKey()], null);
-        VisitorType::query()->create(['name' => 'Contractor', 'slug' => 'contractor', 'host_requirement' => VisitorType::HOST_NONE,
-            'detail_fields' => ['phone' => ['mode' => 'required'], 'company' => ['mode' => 'required']]]);
+        $type = VisitorType::query()->create(['name' => 'Contractor', 'slug' => 'contractor', 'host_requirement' => VisitorType::HOST_NONE,
+            'detail_fields' => ['email' => ['mode' => 'optional'], 'phone' => ['mode' => 'required'], 'company' => ['mode' => 'required']]]);
+
+        // Remembered: WWCC number and photo. Asked every time: reason for visit.
+        foreach ([
+            ['key' => 'wwcc', 'label' => 'WWCC number', 'type' => FormField::TYPE_SHORT_TEXT, 'remember_for_returning' => true],
+            ['key' => 'reason', 'label' => 'Reason for visit', 'type' => FormField::TYPE_SHORT_TEXT],
+            ['key' => 'photo', 'label' => 'Photo', 'type' => FormField::TYPE_PHOTO, 'remember_for_returning' => true],
+        ] as $order => $attributes) {
+            $field = FormField::query()->create($attributes);
+            FormFieldAssignment::query()->create(['form_field_id' => $field->getKey(), 'visitor_type_id' => $type->getKey(), 'is_required' => true, 'sort_order' => $order]);
+        }
 
         $kiosk = Kiosk::query()->create(['site_id' => $this->site->getKey(), 'name' => 'Front']);
         [, $this->secret] = app(KioskDevices::class)->enrol(app(KioskDevices::class)->issueEnrolmentCode($kiosk));
-
-        $this->visitor = Visitor::query()->create([
-            'first_name' => 'Casey', 'name' => 'Contractor', 'email' => 'casey@spark.example', 'phone' => '0412 345 678', 'company' => 'Spark Electrical',
-        ]);
     }
 
     private function kiosk()
@@ -62,53 +75,86 @@ class ReturningVisitorTest extends TestCase
         return Livewire::withCookie(KioskDevices::COOKIE, $this->secret)->test(KioskScreen::class);
     }
 
-    public function test_a_returning_visitor_reuses_their_record_without_the_screen_seeing_saved_values(): void
+    private function photo(): UploadedFile
     {
-        $screen = $this->kiosk()
-            ->call('chooseType', 'contractor')
-            ->call('startReturning')->assertSet('step', 'returning')
-            // Wrong surname and partial number: one neutral message, nothing revealed.
-            ->set('lookupIdentifier', '0412 345 678')->set('lookupLastName', 'Contract')
-            ->call('lookupReturning')->assertHasErrors('lookup')->assertSet('pendingReturningToken', null)
-            ->set('lookupIdentifier', '345 678')->set('lookupLastName', 'Contractor')
-            ->call('lookupReturning')->assertHasErrors('lookup')
-            // Same number written internationally, surname in another case.
-            ->set('lookupIdentifier', '+61 412 345 678')->set('lookupLastName', 'CONTRACTOR')
-            ->call('lookupReturning')->assertHasNoErrors()->assertSet('step', 'details')
+        return UploadedFile::fake()->createWithContent('me.png', base64_decode(self::PNG_1X1));
+    }
+
+    /** First visit at the kiosk: everything typed, photo taken. */
+    private function firstVisit(): Visitor
+    {
+        $this->kiosk()->call('chooseType', 'contractor')->assertSet('step', 'identify')
+            ->set('lookupIdentifier', 'casey@spark.example')->call('lookupReturning')
+            ->assertSet('step', 'details')->assertSet('details.email', 'casey@spark.example')
+            ->set('details.first_name', 'Casey')->set('details.name', 'Contractor')
+            ->set('details.phone', '0412 345 678')->set('details.company', 'Spark Electrical')
+            ->call('submitDetails')->assertHasNoErrors()->assertSet('step', 'questions')
+            ->set('answers.wwcc', 'WWC-123456')->set('answers.reason', 'Wiring')->set('answers.photo', $this->photo())
+            ->call('submitQuestions')->assertHasNoErrors()->assertSet('step', 'confirm')
+            ->call('finish')->assertSet('step', 'done');
+
+        return Visitor::query()->sole();
+    }
+
+    public function test_the_kiosk_loads_a_returning_record_with_photo_and_remembered_answers(): void
+    {
+        $visitor = $this->firstVisit();
+
+        $screen = $this->kiosk()->call('chooseType', 'contractor')
+            // Mobile number written another way: an exact match after normalising.
+            ->set('lookupIdentifier', '+61 412 345 678')->call('lookupReturning')
+            ->assertSet('step', 'details')
             ->assertSee(__('Willkommen zurück, :name!', ['name' => 'Casey']))
-            ->assertSee('c•••@s•••.example')->assertSee('•••• 678');
-
-        $snapshot = json_encode($screen->snapshot['data']);
-        $this->assertStringNotContainsString('casey@spark.example', $snapshot);
-        $this->assertStringNotContainsString('345', $snapshot);
-        $this->assertStringNotContainsString('Spark', $snapshot);
-
-        $screen->call('confirmReturning')
-            ->assertSet('details.first_name', 'Casey')->assertSet('details.phone', null)
-            // Required phone and company come from the saved record on the server.
-            ->call('submitDetails')->assertHasNoErrors()->assertSet('step', 'confirm')
+            ->assertSee('casey@spark.example')->assertSee('Spark Electrical')
+            ->assertSee('kiosk/returning-photo', false)
+            ->call('confirmReturning')
+            ->assertSet('details.phone', '0412 345 678')->assertSet('details.company', 'Spark Electrical')
+            ->call('submitDetails')->assertHasNoErrors()->assertSet('step', 'questions')
+            // WWCC is remembered; the reason is asked again; the photo is reused.
+            ->assertSet('answers.wwcc', 'WWC-123456')->assertSet('answers.reason', null)
+            ->assertSet('savedAnswerKeys', ['photo'])
+            ->call('submitQuestions')->assertHasErrors('answers.reason')
+            ->set('answers.reason', 'Testing alarms')
+            ->call('submitQuestions')->assertHasNoErrors()->assertSet('step', 'confirm')
             ->call('finish')->assertSet('step', 'done');
 
         $this->assertSame(1, Visitor::query()->count());
-        $this->assertSame($this->visitor->getKey(), DB::table('visit_visitor')->sole()->visitor_id);
-        $this->assertSame('0412 345 678', $this->visitor->fresh()->phone);
+        $this->assertSame(2, DB::table('visit_visitor')->where('visitor_id', $visitor->getKey())->count());
+
+        // The second visit keeps its own copy of the photo (evidence is purged per visit).
+        $photos = VisitResponse::query()->where('field_key', 'photo')->orderBy('id')->pluck('file_path');
+        $this->assertCount(2, $photos);
+        $this->assertNotSame($photos[0], $photos[1]);
+        Storage::disk(WorkflowRecorder::EVIDENCE_DISK)->assertExists($photos[1]);
+        $this->assertSame('Testing alarms', VisitResponse::query()->where('field_key', 'reason')->latest('id')->value('value'));
     }
 
-    public function test_typed_values_update_the_saved_record_and_a_forgotten_sign_in_is_closed(): void
+    public function test_no_match_carries_the_value_into_the_form_and_reveals_nothing(): void
     {
-        $first = $this->kiosk()->call('chooseType', 'contractor')->call('startReturning')
-            ->set('lookupIdentifier', 'casey@spark.example')->set('lookupLastName', 'contractor')
-            ->call('lookupReturning')->call('confirmReturning')
-            ->call('submitDetails')->call('finish')->assertSet('step', 'done');
+        $this->firstVisit();
 
-        $this->kiosk()->call('chooseType', 'contractor')->call('startReturning')
-            ->set('lookupIdentifier', 'Casey@Spark.example')->set('lookupLastName', 'Contractor')
-            ->call('lookupReturning')->call('confirmReturning')
+        $this->kiosk()->call('chooseType', 'contractor')
+            ->set('lookupIdentifier', '345 678')->call('lookupReturning')
+            ->assertSet('step', 'details')->assertSet('pendingReturningToken', null)
+            ->assertSet('details.phone', '345 678')->assertDontSee('Casey');
+
+        $this->kiosk()->call('chooseType', 'contractor')
+            ->set('lookupIdentifier', 'casey@spark')->call('lookupReturning')
+            ->assertSet('pendingReturningToken', null)->assertSet('details.email', 'casey@spark');
+    }
+
+    public function test_a_forgotten_sign_in_is_closed_and_typed_values_update_the_record(): void
+    {
+        $visitor = $this->firstVisit();
+
+        $this->kiosk()->call('chooseType', 'contractor')
+            ->set('lookupIdentifier', 'Casey@Spark.example')->call('lookupReturning')->call('confirmReturning')
             ->set('details.company', 'Bright Sparks')
-            ->call('submitDetails')->call('finish')->assertSet('step', 'done');
+            ->call('submitDetails')->set('answers.reason', 'Again')->call('submitQuestions')
+            ->call('finish')->assertSet('step', 'done');
 
-        $this->assertSame('Bright Sparks', $this->visitor->fresh()->company);
-        $rows = DB::table('visit_visitor')->orderBy('checked_in_at')->get();
+        $this->assertSame('Bright Sparks', $visitor->fresh()->company);
+        $rows = DB::table('visit_visitor')->orderBy('checked_in_at')->orderBy('visit_id')->get();
         $this->assertCount(2, $rows);
         $this->assertNotNull($rows[0]->checked_out_at, 'the earlier, forgotten sign-in is closed');
         $this->assertNull($rows[1]->checked_out_at);
@@ -117,17 +163,46 @@ class ReturningVisitorTest extends TestCase
 
     public function test_declining_starts_fresh_and_the_feature_can_be_turned_off(): void
     {
-        $this->kiosk()->call('chooseType', 'contractor')->call('startReturning')
-            ->set('lookupIdentifier', 'casey@spark.example')->set('lookupLastName', 'Contractor')
-            ->call('lookupReturning')->call('declineReturning')
+        $this->firstVisit();
+
+        $this->kiosk()->call('chooseType', 'contractor')
+            ->set('lookupIdentifier', 'casey@spark.example')->call('lookupReturning')->call('declineReturning')
             ->assertSet('pendingReturningToken', null)->assertSet('returningToken', null)
+            ->assertSet('details.email', null)
             ->assertDontSee(__('Willkommen zurück, :name!', ['name' => 'Casey']));
 
         app(SettingsRepository::class)->saveOrganisation(['organisation.visitor_experience.returning_visitors' => '0'], null);
 
-        $this->kiosk()->call('chooseType', 'contractor')
-            ->assertDontSee(__('Schon einmal hier gewesen?'))
-            ->call('startReturning')->assertNotFound();
+        $this->kiosk()->call('chooseType', 'contractor')->assertSet('step', 'details')
+            ->call('lookupReturning')->assertNotFound();
+    }
+
+    public function test_a_phone_uses_the_record_without_showing_it(): void
+    {
+        $this->firstVisit();
+        $link = app(SiteQrLinks::class)->forSite($this->site);
+
+        $screen = Livewire::test(MobileSignIn::class, ['token' => $link->token])
+            ->call('chooseType', 'contractor')->assertSet('step', 'identify')
+            ->set('lookupIdentifier', 'casey@spark.example')->call('lookupReturning')
+            ->assertSee(__('Willkommen zurück, :name!', ['name' => 'Casey']))
+            ->assertSee('c•••@s•••.example')->assertSee('•••• 678')
+            ->assertDontSee('Contractor')->assertDontSee('returning-photo')
+            ->assertSee(__('Das bin ich nicht'))->assertDontSee(__('Nicht ich – vergessen'))
+            ->call('confirmReturning')
+            ->call('submitDetails')->assertHasNoErrors()->assertSet('step', 'questions')
+            ->assertSet('answers', [])->assertSet('savedAnswerKeys', ['wwcc', 'photo']);
+
+        $snapshot = json_encode($screen->snapshot['data']);
+        foreach (['casey@spark.example', '345', 'Spark', 'WWC-123456', 'Contractor'] as $secret) {
+            $this->assertStringNotContainsString($secret, $snapshot);
+        }
+
+        $screen->set('answers.reason', 'Phone visit')->call('submitQuestions')->assertHasNoErrors()
+            ->call('finish')->assertSet('step', 'done');
+
+        $this->assertSame(1, Visitor::query()->count());
+        $this->assertSame(2, VisitResponse::query()->where('field_key', 'wwcc')->count());
     }
 
     public function test_a_phone_remembers_details_only_when_asked_and_can_forget_them(): void
@@ -135,35 +210,38 @@ class ReturningVisitorTest extends TestCase
         $link = app(SiteQrLinks::class)->forSite($this->site);
 
         Livewire::test(MobileSignIn::class, ['token' => $link->token])
-            ->call('chooseType', 'contractor')
+            ->call('chooseType', 'contractor')->call('lookupReturning')
             ->set('details.first_name', 'Robin')->set('details.name', 'Phone')
             ->set('details.phone', '0499 111 222')->set('details.company', 'Acme')
-            ->call('submitDetails')->set('rememberMe', true)->call('finish')->assertSet('step', 'done');
+            ->call('submitDetails')
+            ->set('answers.wwcc', 'W-1')->set('answers.reason', 'R')->set('answers.photo', $this->photo())
+            ->call('submitQuestions')->set('rememberMe', true)->call('finish')->assertSet('step', 'done');
 
         $cookie = Cookie::queued(ReturningVisitors::REMEMBER_COOKIE);
         $this->assertNotNull($cookie);
         $this->assertTrue($cookie->isHttpOnly());
 
-        $screen = Livewire::withCookie(ReturningVisitors::REMEMBER_COOKIE, $cookie->getValue())->test(MobileSignIn::class, ['token' => $link->token])
-            ->call('chooseType', 'contractor')
-            ->assertSee(__('Willkommen zurück, :name!', ['name' => 'Robin']))->assertSee('•••• 222');
-
-        $screen->call('confirmReturning')->call('submitDetails')->assertHasNoErrors()->call('finish')->assertSet('step', 'done');
-        $this->assertSame(2, Visitor::query()->count(), 'Casey plus Robin, reused on the second visit');
-
         Livewire::withCookie(ReturningVisitors::REMEMBER_COOKIE, $cookie->getValue())->test(MobileSignIn::class, ['token' => $link->token])
-            ->call('chooseType', 'contractor')->call('forgetMe')
-            ->assertSet('pendingReturningToken', null);
+            ->call('chooseType', 'contractor')->assertSet('step', 'details')
+            ->assertSee(__('Willkommen zurück, :name!', ['name' => 'Robin']))->assertSee('•••• 222')
+            ->assertSee(__('Nicht ich – vergessen'))
+            ->call('forgetMe')->assertSet('pendingReturningToken', null);
         $this->assertTrue(Cookie::queued(ReturningVisitors::REMEMBER_COOKIE)->getExpiresTime() < time());
     }
 
-    public function test_phones_cannot_look_up_saved_details(): void
+    public function test_the_saved_photo_is_served_only_to_kiosks_of_the_site(): void
     {
-        $link = app(SiteQrLinks::class)->forSite($this->site);
+        $this->firstVisit();
+        $path = VisitResponse::query()->where('field_key', 'photo')->value('file_path');
+        $returning = app(ReturningVisitors::class);
+        $url = route('kiosk.returning-photo', ['token' => $returning->photoToken($path, $this->site->getKey())]);
 
-        Livewire::test(MobileSignIn::class, ['token' => $link->token])
-            ->call('chooseType', 'contractor')
-            ->assertDontSee(__('Schon einmal hier gewesen?'));
+        $this->get($url)->assertRedirect(route('kiosk.enrol'));
+        $this->withCookie(KioskDevices::COOKIE, $this->secret)->get($url)->assertOk()->assertHeader('Cache-Control', 'no-store, private');
+
+        $otherSite = route('kiosk.returning-photo', ['token' => $returning->photoToken($path, $this->site->getKey() + 1)]);
+        $this->withCookie(KioskDevices::COOKIE, $this->secret)->get($otherSite)->assertNotFound();
+        $this->withCookie(KioskDevices::COOKIE, $this->secret)->get(route('kiosk.returning-photo', ['token' => 'nope']))->assertNotFound();
     }
 
     public function test_masks(): void

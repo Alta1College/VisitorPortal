@@ -9,18 +9,26 @@
 namespace App\PublicVisit;
 
 use App\Models\Visitor;
+use App\VisitorWorkflow\Models\FormField;
+use App\VisitorWorkflow\Models\VisitResponse;
+use App\VisitorWorkflow\WorkflowDefinition;
+use App\VisitorWorkflow\WorkflowRecorder;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * Privacy-safe recognition of returning visitors (brief §15).
+ * Recognition of returning visitors (brief §15). Every sign-in keeps the visitor record, and the
+ * answers to questions marked "Remember for returning visitors", so the next visit can be
+ * pre-filled.
  *
- * - Matching needs an exact email address or mobile number AND the exact last name; there is
- *   no search, no partial match and no hint about which part did not match.
- * - The screen only ever receives a masked summary (first name, "p•••@e•••.org", "•••• 678")
- *   and which fields have saved values; the stored values are merged in on the server at
- *   submit. Knowing someone's email and surname therefore never reveals their phone number.
- * - The visitor must confirm before saved details are used.
+ * - Matching needs an exact email address or mobile number: no search, no partial match.
+ * - The visitor must confirm ("That's me") before saved details are used.
+ * - On the kiosk (on site) the saved values and photo are shown and pre-filled. On phones (the
+ *   QR page is internet-reachable) only a masked summary is shown and saved values are merged
+ *   in on the server at submit, so knowing someone's email address never reveals their details
+ *   or photo there.
  * - On a personal phone the visitor may opt in to "remember me": a long-lived encrypted token
  *   in a cookie on that phone only.
  */
@@ -34,24 +42,23 @@ class ReturningVisitors
 
     public const REMEMBER_TTL_DAYS = 180;
 
+    public const PHOTO_TTL_MINUTES = 30;
+
     public const REMEMBER_COOKIE = 'vp_remember';
 
-    /** Fields that can be filled from a saved record. Names are always typed or confirmed. */
-    public const SAVED_FIELDS = ['email', 'phone', 'company'];
+    /** Detail fields that can be filled from a saved record. */
+    public const SAVED_FIELDS = ['first_name', 'name', 'email', 'phone', 'company'];
 
-    public function find(string $identifier, string $lastName): ?Visitor
+    public function find(string $identifier): ?Visitor
     {
         $identifier = trim($identifier);
-        $last = mb_strtolower(trim($lastName));
 
-        if ($identifier === '' || $last === '' || mb_strlen($identifier) > 191) {
+        if ($identifier === '' || mb_strlen($identifier) > 191) {
             return null;
         }
 
-        $candidates = Visitor::query()->whereRaw('LOWER(name) = ?', [$last]);
-
         if (str_contains($identifier, '@')) {
-            return $candidates->whereRaw('LOWER(email) = ?', [mb_strtolower($identifier)])->latest('updated_at')->first();
+            return Visitor::query()->whereRaw('LOWER(email) = ?', [mb_strtolower($identifier)])->latest('updated_at')->first();
         }
 
         $digits = self::digits($identifier);
@@ -60,7 +67,9 @@ class ReturningVisitors
             return null;
         }
 
-        return $candidates->whereNotNull('phone')->latest('updated_at')->limit(50)->get()
+        // Narrow in SQL by the last digit, then compare the normalised numbers exactly.
+        return Visitor::query()->whereNotNull('phone')->where('phone', 'like', '%'.substr($digits, -1))
+            ->latest('updated_at')->limit(1000)->get()
             ->first(fn (Visitor $visitor): bool => self::samePhone($digits, self::digits((string) $visitor->phone)));
     }
 
@@ -94,23 +103,25 @@ class ReturningVisitors
     }
 
     /**
-     * What the screen may show to confirm "is this you?".
+     * What the screen may show to confirm "is this you?": the saved values on a kiosk, a masked
+     * summary on a phone.
      *
-     * @return array{first_name: string, last_name: string, email: ?string, phone: ?string, company: bool}
+     * @return array{first_name: string, last_name: string, email: ?string, phone: ?string, company: ?string, masked: bool}
      */
-    public function summary(Visitor $visitor): array
+    public function summary(Visitor $visitor, bool $full): array
     {
         return [
             'first_name' => (string) $visitor->first_name,
-            'last_name' => (string) $visitor->name,
-            'email' => self::maskEmail($visitor->email),
-            'phone' => self::maskPhone($visitor->phone),
-            'company' => filled($visitor->company),
+            'last_name' => $full ? (string) $visitor->name : mb_substr((string) $visitor->name, 0, 1).'.',
+            'email' => $full ? $visitor->email : self::maskEmail($visitor->email),
+            'phone' => $full ? $visitor->phone : self::maskPhone($visitor->phone),
+            'company' => $full ? $visitor->company : (filled($visitor->company) ? __('Firma gespeichert') : null),
+            'masked' => ! $full,
         ];
     }
 
     /**
-     * Which of the saved fields hold a value (so the screen can say "saved" instead of asking).
+     * Which detail fields hold a saved value (so the screen can say "saved" instead of asking).
      *
      * @return list<string>
      */
@@ -121,7 +132,6 @@ class ReturningVisitors
 
     /**
      * Details for validation: what the visitor typed, with saved values for anything left empty.
-     * First and last name always come from the saved record unless retyped.
      *
      * @param  array<string, mixed>  $typed
      * @return array<string, mixed>
@@ -130,7 +140,7 @@ class ReturningVisitors
     {
         $merged = $typed;
 
-        foreach (['first_name', 'name', ...self::SAVED_FIELDS] as $field) {
+        foreach (self::SAVED_FIELDS as $field) {
             $value = $typed[$field] ?? null;
 
             if (! is_string($value) || trim($value) === '') {
@@ -139,6 +149,113 @@ class ReturningVisitors
         }
 
         return $merged;
+    }
+
+    /**
+     * The visitor's latest answer to each remembered question in this workflow. File answers
+     * count only while the evidence file still exists (it is purged after the retention period).
+     *
+     * @return array<string, VisitResponse> field key => response
+     */
+    public function savedAnswers(Visitor $visitor, WorkflowDefinition $definition): array
+    {
+        $saved = [];
+
+        foreach ($definition->fields as $resolved) {
+            $field = $resolved->field;
+
+            if (! $field->remembersAnswer()) {
+                continue;
+            }
+
+            $response = VisitResponse::query()
+                ->where('visitor_id', $visitor->getKey())
+                ->where('form_field_id', $field->getKey())
+                ->latest('id')
+                ->first();
+
+            if ($response === null) {
+                continue;
+            }
+
+            $usable = in_array($field->type, FormField::FILE_TYPES, true)
+                ? $response->file_path !== null && Storage::disk(WorkflowRecorder::EVIDENCE_DISK)->exists($response->file_path)
+                : filled($response->value);
+
+            if ($usable) {
+                $saved[$field->key] = $response;
+            }
+        }
+
+        return $saved;
+    }
+
+    /**
+     * Answers for validation: what the visitor gave, with saved answers for remembered questions
+     * left empty. A saved file is copied, so this visit keeps its own evidence file.
+     *
+     * @param  array<string, mixed>  $typed
+     * @return array<string, mixed>
+     */
+    public function mergeAnswers(Visitor $visitor, WorkflowDefinition $definition, array $typed): array
+    {
+        $merged = $typed;
+
+        foreach ($this->savedAnswers($visitor, $definition) as $key => $response) {
+            $value = $typed[$key] ?? null;
+
+            if ($value !== null && $value !== '') {
+                continue;
+            }
+
+            $merged[$key] = $response->file_path !== null ? $this->fileCopy($response) : $response->plainValue();
+        }
+
+        return $merged;
+    }
+
+    /**
+     * The visitor's latest remembered photo, for the kiosk's "is this you?" card.
+     */
+    public function latestPhoto(Visitor $visitor): ?string
+    {
+        $disk = Storage::disk(WorkflowRecorder::EVIDENCE_DISK);
+
+        return VisitResponse::query()
+            ->where('visitor_id', $visitor->getKey())
+            ->where('field_type', FormField::TYPE_PHOTO)
+            ->whereNotNull('file_path')
+            ->whereHas('field', fn ($q) => $q->where('remember_for_returning', true))
+            ->latest('id')
+            ->limit(5)
+            ->pluck('file_path')
+            ->first(fn (string $path): bool => $disk->exists($path));
+    }
+
+    /**
+     * Short-lived, site-bound token for showing a saved photo on that site's kiosks.
+     */
+    public function photoToken(string $path, int $siteId): string
+    {
+        return Crypt::encryptString(json_encode(['f' => $path, 's' => $siteId, 'e' => now()->addMinutes(self::PHOTO_TTL_MINUTES)->timestamp]));
+    }
+
+    public function resolvePhotoToken(string $token, int $siteId): ?string
+    {
+        try {
+            $payload = json_decode(Crypt::decryptString($token), true, flags: JSON_THROW_ON_ERROR);
+        } catch (DecryptException|\JsonException) {
+            return null;
+        }
+
+        $path = is_array($payload) ? ($payload['f'] ?? null) : null;
+
+        if (! is_string($path) || ($payload['s'] ?? null) !== $siteId || ($payload['e'] ?? 0) < now()->timestamp
+            || ! str_starts_with($path, WorkflowRecorder::EVIDENCE_DIRECTORY.'/') || str_contains($path, '..')) {
+            return null;
+        }
+
+        return $path;
     }
 
     public static function maskEmail(?string $email): ?string
@@ -159,6 +276,21 @@ class ReturningVisitors
         $digits = self::digits((string) $phone);
 
         return strlen($digits) >= 6 ? '•••• '.substr($digits, -3) : null;
+    }
+
+    private function fileCopy(VisitResponse $response): ?UploadedFile
+    {
+        $disk = Storage::disk(WorkflowRecorder::EVIDENCE_DISK);
+        $contents = $disk->get($response->file_path);
+
+        if ($contents === null) {
+            return null;
+        }
+
+        $path = tempnam(sys_get_temp_dir(), 'saved');
+        file_put_contents($path, $contents);
+
+        return new UploadedFile($path, basename($response->file_path), $disk->mimeType($response->file_path) ?: null, null, true);
     }
 
     private static function digits(string $value): string

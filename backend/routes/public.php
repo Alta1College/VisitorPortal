@@ -24,6 +24,7 @@
 
 use App\Kiosk\Http\KioskEnrolmentController;
 use App\Kiosk\Http\RequireKioskDevice;
+use App\Kiosk\Http\ReturningPhotoController;
 use App\Kiosk\Livewire\KioskScreen;
 use App\PublicVisit\Http\DepartureLinkController;
 use App\QrCheckIn\Livewire\MobileSignIn;
@@ -37,6 +38,11 @@ Route::post('/kiosk/enrol', [KioskEnrolmentController::class, 'store'])
 Route::get('/kiosk', KioskScreen::class)
     ->middleware(RequireKioskDevice::class)
     ->name('kiosk');
+
+// A returning visitor's saved photo on the kiosk (short-lived, site-bound token in the query).
+Route::get('/kiosk/returning-photo', ReturningPhotoController::class)
+    ->middleware([RequireKioskDevice::class, 'throttle:public-visit-page'])
+    ->name('kiosk.returning-photo');
 
 // Mobile check-in from a site's QR code. The token is checked inside the component on every
 // request (Livewire updates bypass route middleware).

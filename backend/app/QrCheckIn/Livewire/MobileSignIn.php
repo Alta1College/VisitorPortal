@@ -117,6 +117,7 @@ class MobileSignIn extends VisitorSignIn
 
         if ($visitor !== null) {
             $this->offerReturning($visitor);
+            $this->rememberedOffer = true;
         }
     }
 

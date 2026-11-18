@@ -62,7 +62,7 @@ class QrCheckInTest extends TestCase
         $this->get('/visit/'.$this->link->token)->assertOk()->assertSee('Visitor')->assertSee('Parent');
 
         Livewire::test(MobileSignIn::class, ['token' => $this->link->token])
-            ->call('chooseType', 'visitor')
+            ->call('chooseType', 'visitor')->call('lookupReturning')
             ->set('details.first_name', 'Pat')->set('details.name', 'Phone')
             ->call('submitDetails')->assertSet('step', 'host')
             // Internet-reachable: two letters are not enough to search the staff directory.
@@ -85,7 +85,7 @@ class QrCheckInTest extends TestCase
         $this->get('/visit/'.str_repeat('a', 32))->assertNotFound();
         $this->get('/visit/short')->assertNotFound();
 
-        $screen = Livewire::test(MobileSignIn::class, ['token' => $this->link->token])->call('chooseType', 'visitor');
+        $screen = Livewire::test(MobileSignIn::class, ['token' => $this->link->token])->call('chooseType', 'visitor')->call('lookupReturning');
         $old = $this->link->token;
 
         app(SiteQrLinks::class)->rotate($this->link);
@@ -103,7 +103,7 @@ class QrCheckInTest extends TestCase
     public function test_the_mobile_page_holds_no_database_ids(): void
     {
         $screen = Livewire::test(MobileSignIn::class, ['token' => $this->link->token])
-            ->call('chooseType', 'visitor')
+            ->call('chooseType', 'visitor')->call('lookupReturning')
             ->set('details.first_name', 'Pat')->set('details.name', 'Phone')
             ->call('submitDetails')->set('hostQuery', 'Ada');
 

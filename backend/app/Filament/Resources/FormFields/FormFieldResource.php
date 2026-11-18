@@ -120,6 +120,10 @@ class FormFieldResource extends Resource
                     ->live(),
                 Toggle::make('show_on_badge')->label(__('Auf dem Ausweis zeigen'))->disabled(fn (Get $get): bool => (bool) $get('is_sensitive')),
                 Toggle::make('show_on_roll_call')->label(__('In der Anwesenheitsliste zeigen'))->helperText(__('Z. B. als Sicherheitshinweis bei einer Evakuierung.')),
+                Toggle::make('remember_for_returning')
+                    ->label(__('Für wiederkehrende Gäste merken'))
+                    ->helperText(__('Die letzte Antwort wird beim nächsten Besuch vorausgefüllt (z. B. WWCC-Nummer, Foto). Aus lassen bei Antworten, die sich jedes Mal ändern, z. B. Besuchsgrund.'))
+                    ->disabled(fn (Get $get): bool => ! in_array($get('type'), FormField::REMEMBERABLE_TYPES, true)),
             ]),
 
             Section::make(__('Bedingung'))

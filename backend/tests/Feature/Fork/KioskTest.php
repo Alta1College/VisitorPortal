@@ -85,7 +85,7 @@ class KioskTest extends TestCase
 
         $screen = $this->screen()
             ->assertSee('Contractor')->assertSee('Visitor')
-            ->call('chooseType', 'contractor')->assertSet('step', 'details')
+            ->call('chooseType', 'contractor')->call('lookupReturning')->assertSet('step', 'details')
             ->set('details.first_name', 'Casey')->set('details.name', 'Contractor')->set('details.company', 'Spark Electrical')
             ->call('submitDetails')->assertHasNoErrors()->assertSet('step', 'host')
             ->set('hostQuery', 'Ada')->assertSee('Ada Avery')
@@ -121,7 +121,7 @@ class KioskTest extends TestCase
 
         // No host, questions or policies: straight from details to confirm.
         $this->screen()
-            ->call('chooseType', 'delivery')->assertSet('step', 'details')
+            ->call('chooseType', 'delivery')->call('lookupReturning')->assertSet('step', 'details')
             ->set('details.first_name', 'Dee')->set('details.name', 'Livery')
             ->call('submitDetails')->assertSet('step', 'confirm')
             ->call('finish')->assertSet('step', 'done');
@@ -134,7 +134,7 @@ class KioskTest extends TestCase
         $this->contractorWithConditionalCard();
 
         $screen = $this->screen()
-            ->call('chooseType', 'contractor')
+            ->call('chooseType', 'contractor')->call('lookupReturning')
             ->set('details.first_name', 'Casey')->set('details.name', 'Contractor');
         $key = $screen->get('submissionKey');
 
@@ -151,7 +151,7 @@ class KioskTest extends TestCase
         $this->contractorWithConditionalCard();
 
         $screen = $this->screen()
-            ->call('chooseType', 'contractor')
+            ->call('chooseType', 'contractor')->call('lookupReturning')
             ->set('details.first_name', 'Casey')->set('details.name', 'Contractor')
             ->call('submitDetails')
             ->set('hostQuery', 'Ada');
@@ -204,7 +204,7 @@ class KioskTest extends TestCase
         $this->assertSame(VisitorType::HOST_OPTIONAL, $type->host_requirement);
 
         $this->screen()
-            ->call('chooseType', 'visitor')
+            ->call('chooseType', 'visitor')->call('lookupReturning')
             ->set('details.first_name', 'Sam')->set('details.name', 'Unsure')
             ->call('submitDetails')->assertSet('step', 'host')->assertSee(__('Ich weiß es nicht'))
             ->call('skipHost')->assertSet('step', 'confirm');

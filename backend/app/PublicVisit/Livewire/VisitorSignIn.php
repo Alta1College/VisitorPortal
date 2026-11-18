@@ -49,7 +49,7 @@ abstract class VisitorSignIn extends Component
     use SignsVisitorsOut;
     use WithFileUploads;
 
-    public const STEPS = ['welcome', 'details', 'host', 'questions', 'policies', 'confirm', 'done'];
+    public const STEPS = ['welcome', 'identify', 'details', 'host', 'questions', 'policies', 'confirm', 'done'];
 
     public string $step = 'welcome';
 
@@ -145,7 +145,9 @@ abstract class VisitorSignIn extends Component
         $this->typeSlug = $type->slug;
         $this->answers = [];
         $this->accepted = [];
-        $this->step = 'details';
+        // Details remembered on this phone are offered straight away; otherwise start with
+        // "email or mobile number" so a returning visitor's record can be loaded.
+        $this->step = $this->pendingReturningToken === null && $this->stepApplies('identify') ? 'identify' : 'details';
     }
 
     public function submitDetails(): void
@@ -219,7 +221,7 @@ abstract class VisitorSignIn extends Component
         $this->resetErrorBag();
 
         try {
-            app(ResponseValidator::class)->validate($this->definition(), $this->preparedAnswers(), [], checkPolicies: false);
+            app(ResponseValidator::class)->validate($this->definition(), $this->answersForValidation($this->preparedAnswers()), [], checkPolicies: false);
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
 
@@ -246,7 +248,7 @@ abstract class VisitorSignIn extends Component
 
     public function back(): void
     {
-        $special = ['signout' => 'welcome', 'signout_confirm' => 'signout', 'returning' => 'details'];
+        $special = ['signout' => 'welcome', 'signout_confirm' => 'signout'];
 
         if (isset($special[$this->step])) {
             $this->resetErrorBag();
@@ -313,7 +315,7 @@ abstract class VisitorSignIn extends Component
      */
     public function restart(): void
     {
-        $this->reset(['step', 'typeSlug', 'details', 'hostQuery', 'hostResults', 'hostToken', 'hostName', 'answers', 'accepted', 'doneFirstName', 'doneHostName', 'goodbyeName', 'lookupIdentifier', 'lookupLastName']);
+        $this->reset(['step', 'typeSlug', 'details', 'hostQuery', 'hostResults', 'hostToken', 'hostName', 'answers', 'accepted', 'doneFirstName', 'doneHostName', 'goodbyeName', 'lookupIdentifier']);
         $this->clearReturning();
         $this->clearSignOut();
         $this->resetErrorBag();
@@ -358,6 +360,9 @@ abstract class VisitorSignIn extends Component
             'detailLabels' => $this->typeSlug !== null ? VisitorDetails::labels($this->visitorType()) : [],
             'detailRequired' => $this->typeSlug !== null ? VisitorDetails::required($this->visitorType()) : [],
             'returningEnabled' => $this->returningEnabled(),
+            'returningPhoto' => in_array($this->step, ['details', 'confirm'], true) ? $this->returningPhotoUrl() : null,
+            'savedPhotos' => $this->step === 'questions' ? $this->savedAnswerPhotos() : [],
+            'identifyFields' => $this->typeSlug !== null ? array_values(array_intersect(['email', 'phone'], VisitorDetails::visible($this->visitorType()))) : [],
             'nameSignOut' => $this->nameSignOutEnabled(),
             'staffed' => $this->staffed(),
             'activeVisitName' => $this->step === 'welcome' ? $this->activeVisitName() : null,
@@ -388,7 +393,7 @@ abstract class VisitorSignIn extends Component
         return VisitorType::query()->availableAt($this->site())->get()->all();
     }
 
-    private function visitorType(): VisitorType
+    protected function visitorType(): VisitorType
     {
         $type = $this->typeSlug !== null ? collect($this->types())->firstWhere('slug', $this->typeSlug) : null;
 
@@ -401,7 +406,7 @@ abstract class VisitorSignIn extends Component
         return $type;
     }
 
-    private function definition(): WorkflowDefinition
+    protected function definition(): WorkflowDefinition
     {
         try {
             return app(WorkflowResolver::class)->resolve($this->site(), $this->visitorType());
@@ -478,6 +483,7 @@ abstract class VisitorSignIn extends Component
         $definition = $this->definition();
 
         return match ($step) {
+            'identify' => $this->returningEnabled() && array_intersect(['email', 'phone'], VisitorDetails::visible($this->visitorType())) !== [],
             'host' => $this->visitorType()->host_requirement !== VisitorType::HOST_NONE,
             'questions' => $definition->fields !== [],
             'policies' => $definition->policies !== [],

@@ -150,7 +150,7 @@ class SelfSignOutTest extends TestCase
 
         Livewire::test(MobileSignIn::class, ['token' => $link->token])
             ->assertDontSee(__('Besuch beenden'))
-            ->call('chooseType', 'delivery')
+            ->call('chooseType', 'delivery')->call('lookupReturning')
             ->set('details.first_name', 'Pat')->set('details.name', 'Phone')
             ->call('submitDetails')->call('finish')->assertSet('step', 'done');
 
