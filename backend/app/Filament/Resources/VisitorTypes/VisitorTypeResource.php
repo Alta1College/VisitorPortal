@@ -11,6 +11,7 @@ namespace App\Filament\Resources\VisitorTypes;
 use App\Filament\Resources\VisitorTypes\Pages\CreateVisitorType;
 use App\Filament\Resources\VisitorTypes\Pages\EditVisitorType;
 use App\Filament\Resources\VisitorTypes\Pages\ListVisitorTypes;
+use App\PublicVisit\VisitorDetails;
 use App\VisitorWorkflow\Models\VisitorType;
 use BackedEnum;
 use Filament\Actions\CreateAction;
@@ -21,6 +22,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -96,7 +98,50 @@ class VisitorTypeResource extends Resource
                 TextInput::make('sort_order')->label(__('Reihenfolge'))->integer()->minValue(0)->default(0),
                 Toggle::make('is_active')->label(__('Aktiv'))->default(true),
             ]),
+            self::detailFieldsSection(),
         ]);
+    }
+
+    /**
+     * Which personal details this type asks for. Names are always required (a visit needs a
+     * name) but can be relabelled; email, phone and company can be required, optional or hidden.
+     */
+    private static function detailFieldsSection(): Section
+    {
+        $defaults = VisitorDetails::settings();
+        $rows = [];
+
+        foreach (VisitorDetails::FIELDS as $field) {
+            $configurable = in_array($field, VisitorDetails::CONFIGURABLE, true);
+
+            $rows[] = Grid::make(2)->schema([
+                Select::make("detail_fields.{$field}.mode")
+                    ->label(VisitorDetails::defaultLabels()[$field])
+                    ->options(VisitorDetails::modes())
+                    ->default($defaults['fields'][$field]['mode'])
+                    ->formatStateUsing(fn (?string $state): string => $configurable ? ($state ?? $defaults['fields'][$field]['mode']) : VisitorDetails::REQUIRED)
+                    ->disabled(! $configurable)
+                    ->dehydrated($configurable)
+                    ->helperText($configurable ? null : __('Immer Pflichtfeld.'))
+                    ->selectablePlaceholder(false)
+                    ->required($configurable)
+                    ->native(false),
+                TextInput::make("detail_fields.{$field}.label")
+                    ->label(__('Eigene Bezeichnung'))
+                    ->placeholder(VisitorDetails::defaultLabels()[$field])
+                    ->maxLength(80),
+            ]);
+        }
+
+        $rows[] = Toggle::make('detail_fields.email_or_phone')
+            ->label(__('E-Mail oder Telefon: mindestens eines angeben'))
+            ->helperText(__('Gilt nur, wenn beide Felder abgefragt werden.'))
+            ->default($defaults['email_or_phone'])
+            ->formatStateUsing(fn ($state): bool => (bool) ($state ?? $defaults['email_or_phone']));
+
+        return Section::make(__('Angaben des Besuchers'))
+            ->description(__('Welche Angaben Besucher dieses Typs am Kiosk und mobil machen.'))
+            ->schema($rows);
     }
 
     public static function table(Table $table): Table

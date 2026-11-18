@@ -31,6 +31,9 @@ final class SettingDefinition
     /** An active local user, stored by id. */
     public const TYPE_USER = 'user';
 
+    /** Yes/no stored as '1'/'0'; empty inherits (a toggle could not express "inherit"). */
+    public const TYPE_YES_NO = 'yes_no';
+
     /**
      * @param  list<mixed>  $rules  Validation rules applied to non-null values.
      */

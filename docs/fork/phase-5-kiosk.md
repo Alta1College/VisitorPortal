@@ -32,7 +32,7 @@ there is no separate "Sign in" step. Pill text uses the organisation's backgroun
 text the foreground colour (`.brand-on-primary` in `/brand.css`), so the kiosk shows brand colours
 only. The bottom-right corner is kept for the mobile check-in QR code (Phase 6).
 
-Then details (contact requirement from upstream's setting) → host search
+Then details (the fields the visitor type asks for, see below) → host search
 (skipped for "no host" types; optional types, the default for new types, offer "I don't
 know" and record the reception contact) → questions (conditional
 fields appear live; photo/file uploads; signature pad) → policies (rendered text + acceptance)
@@ -42,6 +42,23 @@ clears itself 10 s after success and after the configured inactivity time on any
 
 The final submit is `RegisterArrival` (Phase 4): one transaction, idempotent submission key, host
 notified after commit. Attendances record `checked_in_via = kiosk` and the new `kiosk_id`.
+
+## Customising the sign-in
+
+Everything a visitor sees can be changed in the admin console:
+
+| What | Where |
+|---|---|
+| Logo, colours | Settings → Branding |
+| Greeting on/off, welcome heading and message, visitor type question, every step heading (the thank-you heading takes `:name`), sign-in button label, instructions on the confirm step, text after signing in | Settings → Visitor experience (per site if needed) |
+| Visitor types: name, order, sites, host Required / Optional / None | Visitor workflow → Visitor types |
+| Personal details per type: first name, last name, email, phone, company — each Required / Optional / Don't ask (names always required), own label, "email or phone: at least one" | Visitor workflow → Visitor types → Visitor's details |
+| Extra questions, conditions, policies | Visitor workflow → Questions & fields / Policies |
+| Inactivity reset | Visitor workflow → Kiosks |
+
+Types created before this setting (no `detail_fields`) use upstream's visitor contact requirement
+(`privacy.visitor_contact_requirement`) until saved. The server applies the same per-type rules on
+submit (`VisitorDetails::validate($details, $type)` in `RegisterArrival`) and drops hidden fields.
 
 ## Security model
 

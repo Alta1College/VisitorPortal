@@ -35,7 +35,7 @@
     @if ($step === 'welcome')
         {{-- Visitor types straight away: one tap starts the sign-in. Polls so the greeting and types stay current. --}}
         <main wire:poll.300s class="flex flex-1 flex-col pt-[8vh]">
-            <h1 class="kiosk-hero">{{ $greeting }}<br>{{ $welcomeHeading }}</h1>
+            <h1 class="kiosk-hero">@if ($greeting){{ $greeting }}<br>@endif{{ $welcomeHeading }}</h1>
             @if ($welcomeMessage)<p class="mt-4 max-w-2xl text-xl text-base-content">{{ $welcomeMessage }}</p>@endif
 
             @error('submit')<div role="alert" class="alert alert-error mt-6 text-lg">{{ $message }}</div>@enderror
@@ -67,10 +67,11 @@
         <div class="flex flex-1 flex-col gap-8">
 
             @if ($step === 'details')
-                <h1 class="kiosk-title">{{ __('Ihre Angaben') }}</h1>
+                <h1 class="kiosk-title">{{ $headings['details'] }}</h1>
                 <form wire:submit="submitDetails" class="grid gap-4 sm:grid-cols-2">
-                    @foreach (['first_name' => 'given-name', 'name' => 'family-name', 'email' => 'email', 'phone' => 'tel', 'company' => 'organization'] as $field => $autocomplete)
-                        <label class="form-control {{ in_array($field, ['email', 'company'], true) ? 'sm:col-span-2' : '' }}">
+                    @foreach ($detailFields as $field)
+                        @php($autocomplete = ['first_name' => 'given-name', 'name' => 'family-name', 'email' => 'email', 'phone' => 'tel', 'company' => 'organization'][$field])
+                        <label wire:key="detail-{{ $field }}" class="form-control {{ in_array($field, ['email', 'company'], true) ? 'sm:col-span-2' : '' }}">
                             <span class="mb-2 block text-lg font-semibold">{{ $detailLabels[$field] }}@if ($detailRequired[$field]) *@endif</span>
                             <input type="{{ $field === 'email' ? 'email' : ($field === 'phone' ? 'tel' : 'text') }}" autocomplete="{{ $autocomplete }}"
                                    wire:model="details.{{ $field }}" class="input input-bordered kiosk-field w-full @error('details.'.$field) input-error @enderror">
@@ -84,7 +85,7 @@
                 </form>
 
             @elseif ($step === 'host')
-                <h1 class="kiosk-title">{{ __('Wen besuchen Sie?') }}</h1>
+                <h1 class="kiosk-title">{{ $headings['host'] }}</h1>
                 <input type="search" wire:model.live.debounce.300ms="hostQuery" autocomplete="off" placeholder="{{ __('Namen eingeben') }}"
                        class="input input-bordered kiosk-field w-full" autofocus>
                 @error('host')<p class="text-error">{{ $message }}</p>@enderror
@@ -104,7 +105,7 @@
                 </div>
 
             @elseif ($step === 'questions')
-                <h1 class="kiosk-title">{{ __('Ein paar Fragen') }}</h1>
+                <h1 class="kiosk-title">{{ $headings['questions'] }}</h1>
                 <form wire:submit="submitQuestions" class="flex flex-col gap-6">
                     @foreach ($fields as $field)
                         @php($model = 'answers.'.$field->key)
@@ -180,7 +181,7 @@
                 </form>
 
             @elseif ($step === 'policies')
-                <h1 class="kiosk-title">{{ __('Bitte lesen und bestätigen') }}</h1>
+                <h1 class="kiosk-title">{{ $headings['policies'] }}</h1>
                 @error('policies')<p class="text-error">{{ $message }}</p>@enderror
                 <div class="flex flex-col gap-6">
                     @foreach ($policies as $version)
@@ -201,7 +202,7 @@
                 </div>
 
             @elseif ($step === 'confirm')
-                <h1 class="kiosk-title">{{ __('Alles richtig?') }}</h1>
+                <h1 class="kiosk-title">{{ $headings['confirm'] }}</h1>
                 <dl class="grid gap-3 text-xl sm:grid-cols-[auto_1fr]">
                     <dt class="text-base-content">{{ __('Name') }}</dt>
                     <dd class="font-medium">{{ trim(($details['first_name'] ?? '').' '.($details['name'] ?? '')) }}</dd>
@@ -228,7 +229,7 @@
                     <span class="flex size-24 items-center justify-center rounded-full bg-primary text-primary-content" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="size-12"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
                     </span>
-                    <h1 class="kiosk-hero">{{ __('Danke, :name!', ['name' => $doneFirstName]) }}</h1>
+                    <h1 class="kiosk-hero">{{ str_replace(':name', (string) $doneFirstName, $headings['done']) }}</h1>
                     <p class="text-2xl">{{ $confirmation ?: __('Sie sind angemeldet.') }}</p>
                     @if ($doneHostName)
                         <p class="text-xl text-base-content">{{ __(':host wurde über Ihre Ankunft informiert.', ['host' => $doneHostName]) }}</p>

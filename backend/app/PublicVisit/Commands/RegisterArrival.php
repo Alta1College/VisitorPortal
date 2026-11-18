@@ -69,7 +69,7 @@ class RegisterArrival
             throw ValidationException::withMessages(['visitor_type' => __('Dieser Besuchertyp ist hier nicht verfügbar.')]);
         }
 
-        $details = $this->validateDetails($request->details);
+        $details = $this->validateDetails($request->details, $request->visitorType);
         $host = $this->resolveHost($request);
         $workflow = $this->validator->validate($definition, $request->answers, $request->acceptedPolicyVersionIds);
 
@@ -169,9 +169,9 @@ class RegisterArrival
      * @param  array<string, mixed>  $details
      * @return array{first_name: string, name: string, email: ?string, phone: ?string, company: ?string}
      */
-    private function validateDetails(array $details): array
+    private function validateDetails(array $details, VisitorType $type): array
     {
-        return VisitorDetails::validate($details);
+        return VisitorDetails::validate($details, $type);
     }
 
     private function resolveHost(ArrivalRequest $request): User

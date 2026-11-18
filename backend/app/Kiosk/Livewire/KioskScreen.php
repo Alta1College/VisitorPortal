@@ -105,7 +105,7 @@ class KioskScreen extends Component
         $this->resetErrorBag();
 
         try {
-            VisitorDetails::validate($this->details);
+            VisitorDetails::validate($this->details, $this->visitorType());
         } catch (ValidationException $e) {
             $this->addErrorsUnder('details', $e);
 
@@ -266,7 +266,15 @@ class KioskScreen extends Component
             'kiosk' => $kiosk,
             'siteName' => $site->name,
             'logo' => $settings->get('branding.logo_light'),
-            'greeting' => $this->greeting($site),
+            'greeting' => (string) $settings->get('organisation.visitor_experience.show_greeting') === '0' ? null : $this->greeting($site),
+            'headings' => [
+                'details' => $settings->get('organisation.visitor_experience.heading_details') ?: __('Ihre Angaben'),
+                'host' => $settings->get('organisation.visitor_experience.heading_host') ?: __('Wen besuchen Sie?'),
+                'questions' => $settings->get('organisation.visitor_experience.heading_questions') ?: __('Ein paar Fragen'),
+                'policies' => $settings->get('organisation.visitor_experience.heading_policies') ?: __('Bitte lesen und bestätigen'),
+                'confirm' => $settings->get('organisation.visitor_experience.heading_confirm') ?: __('Alles richtig?'),
+                'done' => $settings->get('organisation.visitor_experience.heading_done') ?: __('Danke, :name!'),
+            ],
             'welcomeHeading' => $settings->get('organisation.visitor_experience.welcome_heading') ?: __('Gäste, bitte hier beginnen.'),
             'welcomeMessage' => $settings->get('organisation.visitor_experience.welcome_message'),
             'typeQuestion' => $settings->get('organisation.visitor_experience.visitor_type_question') ?: __('Was führt Sie zu uns?'),
@@ -278,8 +286,9 @@ class KioskScreen extends Component
             'visitorType' => $this->typeSlug !== null ? $this->visitorType() : null,
             'fields' => $definition !== null ? $this->visibleFields($definition) : [],
             'policies' => $definition?->policies ?? [],
-            'detailLabels' => VisitorDetails::labels(),
-            'detailRequired' => array_map(fn (array $rules): bool => in_array('required', $rules, true), VisitorDetails::rules()),
+            'detailFields' => $this->typeSlug !== null ? VisitorDetails::visible($this->visitorType()) : [],
+            'detailLabels' => $this->typeSlug !== null ? VisitorDetails::labels($this->visitorType()) : [],
+            'detailRequired' => $this->typeSlug !== null ? VisitorDetails::required($this->visitorType()) : [],
         ])->layout('public.kiosk.layout', ['siteName' => $site->name, 'idleSeconds' => $kiosk->idle_timeout_seconds]);
     }
 

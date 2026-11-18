@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $name
  * @property string $slug
  * @property string $host_requirement
+ * @property array<string, mixed>|null $detail_fields
  * @property bool $is_active
  */
 class VisitorType extends Model
@@ -38,6 +39,7 @@ class VisitorType extends Model
         'slug',
         'description',
         'host_requirement',
+        'detail_fields',
         'badge_label',
         'badge_color',
         'is_active',
@@ -53,6 +55,7 @@ class VisitorType extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'detail_fields' => 'array',
     ];
 
     /**
