@@ -31,6 +31,9 @@ final class ForkPermissions
     /** Set up network label printers for badges. */
     public const MANAGE_BADGE_PRINTERS = 'Manage:BadgePrinters';
 
+    /** See who is on site, and start, run and end emergency roll calls (sites the user can see). */
+    public const RUN_ROLL_CALL = 'Run:RollCall';
+
     public const ADMIN = [
         self::MANAGE_ORGANISATION_SETTINGS,
         self::MANAGE_SITE_SETTINGS,
@@ -39,5 +42,10 @@ final class ForkPermissions
         self::MANAGE_KIOSKS,
         self::MANAGE_QR_CHECK_IN,
         self::MANAGE_BADGE_PRINTERS,
+        self::RUN_ROLL_CALL,
+    ];
+
+    public const RECEPTIONIST = [
+        self::RUN_ROLL_CALL,
     ];
 }

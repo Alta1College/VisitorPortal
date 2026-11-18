@@ -102,7 +102,7 @@ class CheckInOutBoardTest extends TestCase
 
             Livewire::actingAs($user)
                 ->test(CheckInOutBoard::class)
-                ->assertSee('2 Treffer')
+                ->assertSee(trans_choice(':count Treffer|:count Treffer', 2, ['count' => 2]))
                 ->assertSee('Heutiger Besuch')
                 ->assertSee('Baldiger Besuch')
                 ->assertDontSee('Vergangener Besuch')
@@ -375,7 +375,7 @@ class CheckInOutBoardTest extends TestCase
             Livewire::actingAs($user)
                 ->test(CheckInOutBoard::class)
                 ->set('search', 'Clara')
-                ->assertSee('1 Treffer')
+                ->assertSee(trans_choice(':count Treffer|:count Treffer', 1, ['count' => 1]))
                 ->assertSee('Heutiger Clara Besuch')
                 ->assertSee('Clara Heute')
                 ->assertDontSee('Alter Clara Besuch')

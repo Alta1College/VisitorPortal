@@ -58,6 +58,8 @@ return [
         'visitor_instructions' => env('VISITOR_INSTRUCTIONS'),
         'sign_in_confirmation' => env('VISITOR_SIGN_IN_CONFIRMATION'),
         'sign_out_confirmation' => env('VISITOR_SIGN_OUT_CONFIRMATION'),
+        // "HH:MM" in each site's timezone (e.g. 18:00), "off" or empty for none. Sites can override.
+        'auto_sign_out_time' => env('VISITOR_AUTO_SIGN_OUT_TIME'),
     ],
 
     // User recorded as host when a visitor type needs no host, or the visitor does not pick

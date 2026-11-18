@@ -69,7 +69,7 @@ final class BadgeContent
                 continue;
             }
 
-            $fields[$field->label] = self::answerLabel($field, (string) $response->plainValue());
+            $fields[$field->label] = $field->displayAnswer((string) $response->plainValue());
         }
 
         return new self(
@@ -129,15 +129,6 @@ final class BadgeContent
             ->first(fn (string $candidate): bool => $disk->exists($candidate));
 
         return $path !== null ? self::fileDataUri($disk, $path) : null;
-    }
-
-    private static function answerLabel(FormField $field, string $value): string
-    {
-        return match ($field->type) {
-            FormField::TYPE_YES_NO => $value === '1' ? __('Ja') : __('Nein'),
-            FormField::TYPE_DROPDOWN => collect($field->options ?? [])->firstWhere('value', $value)['label'] ?? $value,
-            default => $value,
-        };
     }
 
     private static function footer(Site $site): string

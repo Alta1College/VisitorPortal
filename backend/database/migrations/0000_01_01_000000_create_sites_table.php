@@ -28,7 +28,7 @@ return new class extends Migration
         DB::table('sites')->insert([
             'name' => 'Default Site',
             'slug' => 'default',
-            'timezone' => 'Europe/Berlin',
+            'timezone' => config('app.timezone', 'Europe/Berlin'),
             'is_active' => true,
             'created_at' => now(),
             'updated_at' => now(),

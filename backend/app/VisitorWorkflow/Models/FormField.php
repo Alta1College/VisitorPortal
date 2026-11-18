@@ -142,4 +142,16 @@ class FormField extends Model
     {
         return array_values(array_map(fn (array $option): string => (string) $option['value'], $this->options ?? []));
     }
+
+    /**
+     * A stored answer as people read it (Yes/No, the option's label).
+     */
+    public function displayAnswer(string $value): string
+    {
+        return match ($this->type) {
+            self::TYPE_YES_NO, self::TYPE_CHECKBOX, self::TYPE_ACKNOWLEDGEMENT => $value === '1' ? __('Ja') : __('Nein'),
+            self::TYPE_DROPDOWN => (string) (collect($this->options ?? [])->firstWhere('value', $value)['label'] ?? $value),
+            default => $value,
+        };
+    }
 }

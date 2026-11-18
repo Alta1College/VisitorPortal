@@ -29,3 +29,9 @@ upstream merges can be reviewed quickly. New files added by the fork are not lis
 | `backend/resources/views/livewire/reception/partials/dashboard-participant-row.blade.php`, `backend/resources/views/reception/partials/all-visits/participant-row.blade.php` | "Label" form button before upstream's PDF badge button (shown only with `label_url`) | Reprint on the label printer | 8 | No |
 | `backend/resources/views/livewire/reception/{dashboard-page,all-visits-page}.blade.php` | `<x-bp.alert />` (upstream component) at the top | Show "Printing on …" after a reprint | 8 | No |
 | `kiosks`, `visitor_types` tables (migration, no file edit) | Additive `kiosks.badge_printer_id`, `visitor_types.print_badge` | Which printer a kiosk uses; which types get a badge | 8 | No |
+| `backend/bootstrap/providers.php` | Register `EmergencyServiceProvider` | Register, roll calls, automatic sign-out | 9 | No |
+| `backend/app/Support/VisitorPortalPermissions.php` | Merge `ForkPermissions::RECEPTIONIST` into the receptionist role (one statement) | Receptionists run roll calls | 9 | No |
+| `backend/resources/views/layouts/navigation.blade.php` | "On site now" link (desktop and mobile), shown with `Run:RollCall` | Reach the register and roll calls | 9 | No |
+| `backend/lang/{en,de,fr,cs}.json` | Two missing upstream plurals (`:count Stunde…`, `:count Treffer…`) | German showed on the check-in/out board | 9 | Yes |
+| `backend/tests/Feature/Portal/CheckInOutBoardTest.php` | Two assertions use `trans_choice()` instead of literal German "Treffer" | The plural is now translated | 9 | Yes |
+| `backend/database/migrations/0000_01_01_000000_create_sites_table.php` | Default site timezone from `config('app.timezone')` | Remove hard-coded `Europe/Berlin` (new installs) | 9 | Yes |

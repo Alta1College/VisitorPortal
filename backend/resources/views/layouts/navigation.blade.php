@@ -204,6 +204,16 @@
                         </svg>
                         <span>{{ __('Alle Besuche') }}</span>
                     </a>
+
+                    {{-- Fork (Phase 9): register and emergency roll call. --}}
+                    @can('Run:RollCall')
+                    <a href="{{ route('reception.on-site') }}" class="{{ $navLinkClasses(request()->routeIs('reception.on-site', 'reception.roll-calls.*')) }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" />
+                        </svg>
+                        <span>{{ __('Jetzt auf dem Gelände') }}</span>
+                    </a>
+                    @endcan
                 </div>
             @endif
 
@@ -347,6 +357,9 @@
                         <a href="{{ route('portal.check_in_out') }}" class="{{ $navLinkClasses(request()->routeIs('portal.check_in_out')) }}" wire:navigate.hover @click="navOpen = false">{{ __('Check-In/Out') }}</a>
                     @endcanany
                     <a href="{{ route('reception.all-visits') }}" class="{{ $navLinkClasses(request()->routeIs('reception.all-visits')) }}" wire:navigate.hover @click="navOpen = false">{{ __('Alle Besuche') }}</a>
+                    @can('Run:RollCall')
+                        <a href="{{ route('reception.on-site') }}" class="{{ $navLinkClasses(request()->routeIs('reception.on-site', 'reception.roll-calls.*')) }}" @click="navOpen = false">{{ __('Jetzt auf dem Gelände') }}</a>
+                    @endcan
                 @endif
 
                 @if ($canSeeMonitor && $visibleMonitor)

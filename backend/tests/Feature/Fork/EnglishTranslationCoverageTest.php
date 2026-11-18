@@ -31,7 +31,7 @@ class EnglishTranslationCoverageTest extends TestCase
                 }
 
                 $source = (string) file_get_contents((string) $file);
-                preg_match_all('/__\(\s*\'((?:[^\'\\\\]|\\\\.)*)\'/', $source, $calls);
+                preg_match_all('/(?:__|trans_choice)\(\s*\'((?:[^\'\\\\]|\\\\.)*)\'/', $source, $calls);
                 $keys = $calls[1];
 
                 // Settings labels and help texts are translated when the form is built.

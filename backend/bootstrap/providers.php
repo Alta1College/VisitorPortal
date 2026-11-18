@@ -8,6 +8,7 @@
 
 use App\Audit\AuditServiceProvider;
 use App\Badges\BadgesServiceProvider;
+use App\Emergency\EmergencyServiceProvider;
 use App\Messaging\MessagingServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
@@ -24,6 +25,7 @@ return [
     PublicVisitServiceProvider::class,
     MessagingServiceProvider::class,
     BadgesServiceProvider::class,
+    EmergencyServiceProvider::class,
     AppServiceProvider::class,
     FortifyServiceProvider::class,
     AdminPanelProvider::class,
