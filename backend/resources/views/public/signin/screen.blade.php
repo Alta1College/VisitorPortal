@@ -16,7 +16,7 @@
             @if ($mode !== 'kiosk')
             return; // the visitor's own phone: nothing to clear for the next person
             @endif
-            const ms = step === 'done' ? 10000 : {{ $idleMs ?? 90000 }};
+            const ms = (step === 'done' || step === 'signed_out') ? 10000 : {{ $idleMs ?? 90000 }};
             this.timer = setTimeout(() => $wire.restart(), ms);
         },
     }"
@@ -30,7 +30,9 @@
         @else
             <span class="text-3xl font-extrabold">{{ config('branding.name') }}</span>
         @endif
-        @if (! in_array($step, ['welcome', 'done'], true))
+        @if ($step === 'welcome' && $nameSignOut)
+            <button type="button" wire:click="startSignOut" class="btn btn-outline rounded-full border-2 border-base-content/30 px-5 text-base font-bold text-base-content">{{ $signOutLabel }}</button>
+        @elseif (! in_array($step, ['welcome', 'done', 'signed_out'], true))
             <button type="button" wire:click="restart" class="btn btn-outline rounded-full border-2 border-base-content/30 px-5 text-base font-bold text-base-content">{{ __('Abbrechen') }}</button>
         @endif
     </header>
@@ -38,6 +40,13 @@
     @if ($step === 'welcome')
         {{-- Visitor types straight away: one tap starts the sign-in. Polls so the greeting and types stay current. --}}
         <main wire:poll.300s class="flex flex-1 flex-col pt-[8vh]">
+            @if ($activeVisitName)
+                {{-- This phone signed in earlier and the visit is still open: offer sign-out first. --}}
+                <div class="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[1.5rem] bg-base-100 p-5 shadow-sm">
+                    <p class="text-lg font-semibold">{{ __('Sie sind angemeldet, :name.', ['name' => $activeVisitName]) }}</p>
+                    <button type="button" wire:click="signOutHere" wire:loading.attr="disabled" class="btn btn-primary kiosk-tap">{{ $signOutLabel }}</button>
+                </div>
+            @endif
             <h1 class="kiosk-hero">@if ($greeting){{ $greeting }}<br>@endif{{ $welcomeHeading }}</h1>
             @if ($welcomeMessage)<p class="mt-4 max-w-2xl text-xl text-base-content">{{ $welcomeMessage }}</p>@endif
 
@@ -57,7 +66,13 @@
             @endif
 
             <footer class="mt-auto flex items-end justify-between gap-6 pt-10">
-                <p class="max-w-sm text-base text-base-content">{{ __('Zum Abmelden wenden Sie sich bitte an den Empfang.') }}</p>
+                <p class="max-w-sm text-base text-base-content">
+                    @if ($nameSignOut)
+                        {{ __('Gehen Sie? Tippen Sie oben rechts auf „:label“.', ['label' => $signOutLabel]) }}
+                    @else
+                        {{ __('Zum Abmelden nutzen Sie den Link aus Ihrer E-Mail, den Kiosk oder den Empfang.') }}
+                    @endif
+                </p>
                 @if ($welcomeQr)
                     <figure class="flex shrink-0 flex-col items-center gap-2">
                         <div class="size-36 rounded-2xl bg-white p-2 shadow-sm [&>svg]:size-full sm:size-40" aria-hidden="true">{!! $welcomeQr !!}</div>
@@ -76,13 +91,42 @@
 
             @if ($step === 'details')
                 <h1 class="kiosk-title">{{ $headings['details'] }}</h1>
+
+                @if ($pendingReturningToken)
+                    {{-- Masked summary only: the visitor confirms before saved details are used. --}}
+                    <div class="flex flex-col gap-4 rounded-[1.5rem] border-2 border-primary p-5">
+                        <p class="text-2xl font-bold">{{ __('Willkommen zurück, :name!', ['name' => $returningSummary['first_name'] ?? '']) }}</p>
+                        <ul class="text-lg">
+                            <li>{{ trim(($returningSummary['first_name'] ?? '').' '.($returningSummary['last_name'] ?? '')) }}</li>
+                            @if ($returningSummary['email'] ?? null)<li>{{ $returningSummary['email'] }}</li>@endif
+                            @if ($returningSummary['phone'] ?? null)<li>{{ $returningSummary['phone'] }}</li>@endif
+                            @if ($returningSummary['company'] ?? false)<li>{{ __('Firma gespeichert') }}</li>@endif
+                        </ul>
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" wire:click="confirmReturning" class="btn btn-primary kiosk-tap flex-1">{{ __('Gespeicherte Angaben verwenden') }}</button>
+                            @if ($mode === 'mobile')
+                                <button type="button" wire:click="forgetMe" class="btn btn-ghost kiosk-tap">{{ __('Nicht ich – vergessen') }}</button>
+                            @else
+                                <button type="button" wire:click="declineReturning" class="btn btn-ghost kiosk-tap">{{ __('Das bin ich nicht') }}</button>
+                            @endif
+                        </div>
+                    </div>
+                @elseif ($returningEnabled && ! $returningToken && $mode === 'kiosk')
+                    <button type="button" wire:click="startReturning" class="btn btn-outline kiosk-tap self-start border-2">{{ __('Schon einmal hier gewesen?') }}</button>
+                @endif
+
+                @if ($returningToken)
+                    <p class="rounded-box bg-base-200 p-4 text-lg">{{ __('Ihre gespeicherten Angaben werden verwendet. Leere Felder behalten den gespeicherten Wert; tragen Sie etwas ein, um es zu ändern.') }}</p>
+                @endif
+
                 <form wire:submit="submitDetails" class="grid gap-4 sm:grid-cols-2">
                     @foreach ($detailFields as $field)
                         @php($autocomplete = ['first_name' => 'given-name', 'name' => 'family-name', 'email' => 'email', 'phone' => 'tel', 'company' => 'organization'][$field])
                         <label wire:key="detail-{{ $field }}" class="form-control {{ in_array($field, ['email', 'company'], true) ? 'sm:col-span-2' : '' }}">
                             <span class="mb-2 block text-lg font-semibold">{{ $detailLabels[$field] }}@if ($detailRequired[$field]) *@endif</span>
                             <input type="{{ $field === 'email' ? 'email' : ($field === 'phone' ? 'tel' : 'text') }}" autocomplete="{{ $autocomplete }}"
-                                   wire:model="details.{{ $field }}" class="input input-bordered kiosk-field w-full @error('details.'.$field) input-error @enderror">
+                                   wire:model="details.{{ $field }}" class="input input-bordered kiosk-field w-full @error('details.'.$field) input-error @enderror"
+                                   @if (in_array($field, $savedFields, true)) placeholder="{{ __('Gespeichert') }}" @endif>
                             @error('details.'.$field)<span class="mt-1 text-error">{{ $message }}</span>@enderror
                         </label>
                     @endforeach
@@ -224,12 +268,104 @@
                     @endif
                 </dl>
                 @if ($instructions)<p class="rounded-box bg-base-200 p-4 text-lg">{{ $instructions }}</p>@endif
+                @if ($mode === 'mobile' && $returningEnabled)
+                    <label class="flex cursor-pointer items-start gap-4 rounded-box border border-base-300 p-4">
+                        <input type="checkbox" wire:model="rememberMe" class="checkbox checkbox-primary checkbox-lg mt-1">
+                        <span class="text-lg">{{ __('Meine Angaben auf diesem Handy merken, damit ich sie beim nächsten Besuch nicht neu eingeben muss.') }}</span>
+                    </label>
+                @endif
                 <div class="mt-auto flex gap-3">
                     <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
                     <button type="button" wire:click="finish" wire:loading.attr="disabled" class="btn btn-primary kiosk-tap flex-1 text-2xl">
                         <span wire:loading.remove wire:target="finish">{{ $signInLabel }}</span>
                         <span wire:loading wire:target="finish" class="loading loading-spinner"></span>
                     </button>
+                </div>
+
+            @elseif ($step === 'returning')
+                <h1 class="kiosk-title">{{ __('Schon einmal hier gewesen?') }}</h1>
+                <p class="text-lg">{{ __('Geben Sie Ihre E-Mail-Adresse oder Handynummer und Ihren Nachnamen ein, genau wie beim letzten Besuch.') }}</p>
+                <form wire:submit="lookupReturning" class="grid gap-4">
+                    <label class="form-control">
+                        <span class="mb-2 block text-lg font-semibold">{{ __('E-Mail oder Handynummer') }}</span>
+                        <input type="text" inputmode="email" autocomplete="off" wire:model="lookupIdentifier" class="input input-bordered kiosk-field w-full">
+                    </label>
+                    <label class="form-control">
+                        <span class="mb-2 block text-lg font-semibold">{{ __('Nachname') }}</span>
+                        <input type="text" autocomplete="off" wire:model="lookupLastName" class="input input-bordered kiosk-field w-full">
+                    </label>
+                    @error('lookup')<p class="text-lg text-error">{{ $message }}</p>@enderror
+                    <div class="flex gap-3">
+                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
+                        <button type="submit" class="btn btn-primary kiosk-tap flex-1" wire:loading.attr="disabled">{{ __('Suchen') }}</button>
+                    </div>
+                </form>
+
+            @elseif ($step === 'signout')
+                <h1 class="kiosk-title">{{ $signOutLabel }}</h1>
+                @if ($staffed)
+                    <p class="text-lg">{{ __('Geben Sie Ihren Namen ein und tippen Sie darauf.') }}</p>
+                    <input type="search" wire:model.live.debounce.300ms="signOutQuery" autocomplete="off" placeholder="{{ __('Namen eingeben') }}" class="input input-bordered kiosk-field w-full" autofocus>
+                    @error('signout')<p class="text-lg text-error">{{ $message }}</p>@enderror
+                    <div class="flex flex-col gap-3">
+                        @foreach ($signOutResults as $index => $option)
+                            <button type="button" wire:key="out-{{ $index }}" wire:click="chooseSignOut({{ $index }})" class="btn btn-outline kiosk-tap justify-between border-2 text-2xl">
+                                <span>{{ $option['name'] }}</span><span class="text-base font-normal">{{ __('seit :time', ['time' => $option['since']]) }}</span>
+                            </button>
+                        @endforeach
+                        @if (mb_strlen(trim($signOutQuery)) >= 2 && $signOutResults === [])
+                            <p class="text-lg">{{ __('Wir konnten Ihren Besuch nicht finden. Bitte prüfen Sie die Schreibweise oder wenden Sie sich an den Empfang.') }}</p>
+                        @endif
+                    </div>
+                    <div class="mt-auto flex gap-3">
+                        <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
+                    </div>
+                @else
+                    <p class="text-lg">{{ __('Geben Sie Ihren Vor- und Nachnamen genau wie bei der Anmeldung ein.') }}</p>
+                    <form wire:submit="findSignOut" class="grid gap-4 sm:grid-cols-2">
+                        <label class="form-control">
+                            <span class="mb-2 block text-lg font-semibold">{{ __('Vorname') }}</span>
+                            <input type="text" autocomplete="off" wire:model="signOutFirst" class="input input-bordered kiosk-field w-full">
+                        </label>
+                        <label class="form-control">
+                            <span class="mb-2 block text-lg font-semibold">{{ __('Nachname') }}</span>
+                            <input type="text" autocomplete="off" wire:model="signOutLast" class="input input-bordered kiosk-field w-full">
+                        </label>
+                        @error('signout')<p class="text-lg text-error sm:col-span-2">{{ $message }}</p>@enderror
+                        @if (count($signOutResults) > 1)
+                            <div class="flex flex-col gap-3 sm:col-span-2">
+                                <p class="text-lg">{{ __('Mehrere Besuche gefunden. Wann haben Sie sich angemeldet?') }}</p>
+                                @foreach ($signOutResults as $index => $option)
+                                    <button type="button" wire:key="out-{{ $index }}" wire:click="chooseSignOut({{ $index }})" class="btn btn-outline kiosk-tap justify-between border-2 text-xl">
+                                        <span>{{ $option['name'] }}</span><span class="text-base font-normal">{{ __('seit :time', ['time' => $option['since']]) }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+                        <div class="flex gap-3 sm:col-span-2">
+                            <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
+                            <button type="submit" class="btn btn-primary kiosk-tap flex-1" wire:loading.attr="disabled">{{ __('Weiter') }}</button>
+                        </div>
+                    </form>
+                @endif
+
+            @elseif ($step === 'signout_confirm')
+                <h1 class="kiosk-title">{{ __('Besuch beenden?') }}</h1>
+                <p class="text-2xl">{{ __(':name, möchten Sie sich jetzt abmelden?', ['name' => $signOutName]) }}</p>
+                @error('signout')<p class="text-lg text-error">{{ $message }}</p>@enderror
+                <div class="mt-auto flex gap-3">
+                    <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
+                    <button type="button" wire:click="confirmSignOut" wire:loading.attr="disabled" class="btn btn-primary kiosk-tap flex-1 text-2xl">{{ __('Jetzt abmelden') }}</button>
+                </div>
+
+            @elseif ($step === 'signed_out')
+                <div class="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+                    <span class="flex size-24 items-center justify-center rounded-full bg-primary text-primary-content" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="size-12"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    </span>
+                    <h1 class="kiosk-hero">{{ __('Auf Wiedersehen, :name!', ['name' => $goodbyeName]) }}</h1>
+                    <p class="text-2xl">{{ $signOutConfirmation ?: __('Sie sind abgemeldet. Danke für Ihren Besuch.') }}</p>
+                    <button type="button" wire:click="restart" class="btn btn-primary kiosk-tap w-full max-w-md">{{ __('Fertig') }}</button>
                 </div>
 
             @elseif ($step === 'done')

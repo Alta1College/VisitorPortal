@@ -45,6 +45,8 @@ return [
         'welcome_message' => env('VISITOR_WELCOME_MESSAGE'),
         'visitor_type_question' => env('VISITOR_TYPE_QUESTION'),
         'show_greeting' => env('VISITOR_SHOW_GREETING'),
+        'returning_visitors' => env('VISITOR_RETURNING'),
+        'email_sign_out_link' => env('VISITOR_EMAIL_SIGN_OUT_LINK'),
         'heading_details' => null,
         'heading_host' => null,
         'heading_questions' => null,

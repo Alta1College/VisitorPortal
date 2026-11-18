@@ -18,13 +18,14 @@
 | upstream Livewire components or Filament actions, and must never accept database ids.
 | See docs/fork/phase-4-public-boundary.md.
 |
-| Phase 7 adds email sign-out.
+| /leave/{token} is the emailed sign-out link (Phase 7).
 |
 */
 
 use App\Kiosk\Http\KioskEnrolmentController;
 use App\Kiosk\Http\RequireKioskDevice;
 use App\Kiosk\Livewire\KioskScreen;
+use App\PublicVisit\Http\DepartureLinkController;
 use App\QrCheckIn\Livewire\MobileSignIn;
 use Illuminate\Support\Facades\Route;
 
@@ -43,3 +44,13 @@ Route::get('/visit/{token}', MobileSignIn::class)
     ->where('token', '[A-Za-z0-9]{32,64}')
     ->middleware('throttle:public-visit-page')
     ->name('visit');
+
+// Emailed sign-out link. GET only shows a button; the POST signs out (link scanners fetch GET).
+Route::get('/leave/{token}', [DepartureLinkController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{40}')
+    ->middleware('throttle:public-departure')
+    ->name('leave');
+Route::post('/leave/{token}', [DepartureLinkController::class, 'store'])
+    ->where('token', '[A-Za-z0-9]{40}')
+    ->middleware('throttle:public-departure')
+    ->name('leave.store');

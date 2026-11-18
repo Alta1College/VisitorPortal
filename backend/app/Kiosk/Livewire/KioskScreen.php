@@ -57,6 +57,16 @@ class KioskScreen extends VisitorSignIn
         return max(15, (int) $this->kiosk()->idle_timeout_seconds);
     }
 
+    protected function nameSignOutEnabled(): bool
+    {
+        return true;
+    }
+
+    protected function staffed(): bool
+    {
+        return (bool) $this->kiosk()->is_staffed;
+    }
+
     protected function welcomeQr(): ?string
     {
         $links = app(SiteQrLinks::class);

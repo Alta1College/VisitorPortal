@@ -9,10 +9,17 @@
 namespace App\QrCheckIn\Livewire;
 
 use App\Models\Site;
+use App\Models\Visitor;
+use App\PublicVisit\AttendanceTokens;
 use App\PublicVisit\Channel;
+use App\PublicVisit\Commands\ArrivalResult;
+use App\PublicVisit\Commands\RecordDeparture;
 use App\PublicVisit\Livewire\VisitorSignIn;
+use App\PublicVisit\ReturningVisitors;
 use App\QrCheckIn\SiteQrLink;
 use App\QrCheckIn\SiteQrLinks;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 
 /**
@@ -27,12 +34,90 @@ class MobileSignIn extends VisitorSignIn
     #[Locked]
     public string $token = '';
 
+    /** Cookie on the visitor's phone holding their departure token, so scanning again offers "Sign out". */
+    public const DEPARTURE_COOKIE = 'vp_departure';
+
+    /** Opt-in on the confirm step: keep a "remember me" token on this phone. */
+    public bool $rememberMe = false;
+
     private ?SiteQrLink $link = null;
 
     public function mount(string $token): void
     {
         $this->token = $token;
         $this->startScreen();
+        $this->offerRemembered();
+    }
+
+    /**
+     * Sign out the visit this phone signed in (departure token from the cookie).
+     */
+    public function signOutHere(): void
+    {
+        $token = (string) request()->cookie(self::DEPARTURE_COOKIE, '');
+
+        try {
+            $this->goodbyeName = app(RecordDeparture::class)->handle($token, Channel::Qr);
+        } catch (ValidationException $e) {
+            $this->addError('submit', $e->validator->errors()->first());
+            Cookie::queue(Cookie::forget(self::DEPARTURE_COOKIE));
+
+            return;
+        }
+
+        Cookie::queue(Cookie::forget(self::DEPARTURE_COOKIE));
+        $this->step = 'signed_out';
+    }
+
+    /**
+     * Remove the remembered details from this phone.
+     */
+    public function forgetMe(): void
+    {
+        Cookie::queue(Cookie::forget(ReturningVisitors::REMEMBER_COOKIE));
+        $this->clearReturning();
+        $this->details = ['first_name' => null, 'name' => null, 'email' => null, 'phone' => null, 'company' => null];
+    }
+
+    protected function afterArrival(ArrivalResult $result): void
+    {
+        $minutes = AttendanceTokens::DEPARTURE_TTL_HOURS * 60;
+        Cookie::queue(Cookie::make(self::DEPARTURE_COOKIE, $result->departureToken, $minutes, null, null, request()->isSecure(), true, false, 'lax'));
+
+        if ($this->rememberMe && $this->returningEnabled() && ($visitor = Visitor::query()->find($result->visitorId)) !== null) {
+            $days = ReturningVisitors::REMEMBER_TTL_DAYS;
+            Cookie::queue(Cookie::make(ReturningVisitors::REMEMBER_COOKIE, app(ReturningVisitors::class)->token($visitor, ReturningVisitors::PURPOSE_REMEMBER), $days * 24 * 60, null, null, request()->isSecure(), true, false, 'lax'));
+        }
+
+        $this->rememberMe = false;
+    }
+
+    protected function afterRestart(): void
+    {
+        $this->offerRemembered();
+    }
+
+    protected function activeVisitName(): ?string
+    {
+        $token = request()->cookie(self::DEPARTURE_COOKIE);
+
+        return is_string($token) && $token !== '' ? app(RecordDeparture::class)->tokenIsActiveAt($token, $this->site()->getKey()) : null;
+    }
+
+    /**
+     * Details remembered on this phone are offered (masked) for the visitor to confirm.
+     */
+    private function offerRemembered(): void
+    {
+        if (! $this->returningEnabled()) {
+            return;
+        }
+
+        $visitor = app(ReturningVisitors::class)->resolve((string) request()->cookie(ReturningVisitors::REMEMBER_COOKIE, ''));
+
+        if ($visitor !== null) {
+            $this->offerReturning($visitor);
+        }
     }
 
     protected function site(): Site
