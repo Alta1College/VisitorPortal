@@ -1,11 +1,16 @@
 {{-- SPDX-FileCopyrightText: 2026 Jonathan Läpple and VisitorPortal contributors --}}
 {{-- SPDX-License-Identifier: GPL-3.0-or-later --}}
-{{-- Kiosk layout (fork). Touch-first, always the light theme, organisation colours from brand.css. --}}
+{{-- Visitor sign-in layout (fork): kiosk and mobile. Touch-first, always the light theme, organisation colours from brand.css. --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light" data-theme-preference="light">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    @if (($mode ?? 'kiosk') === 'kiosk')
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    @else
+        {{-- Visitors' own phones: allow zooming (accessibility). --}}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    @endif
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $siteName ?? config('branding.name') }}</title>

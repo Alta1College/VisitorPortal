@@ -16,6 +16,9 @@ use App\Kiosk\Http\RequireKioskDevice;
 use App\Kiosk\Kiosk;
 use App\Kiosk\KioskPolicy;
 use App\PublicVisit\Console\PrunePublicVisitData;
+use App\QrCheckIn\Http\QrPosterController;
+use App\QrCheckIn\SiteQrLink;
+use App\QrCheckIn\SiteQrLinkPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Request;
@@ -57,6 +60,13 @@ class PublicVisitServiceProvider extends ServiceProvider
         Livewire::addPersistentMiddleware([RequireKioskDevice::class]);
 
         Gate::policy(Kiosk::class, KioskPolicy::class);
+        Gate::policy(SiteQrLink::class, SiteQrLinkPolicy::class);
+
+        // Staff-only printable poster (normal web stack: signed in, MFA enforced).
+        Route::middleware(['web', 'auth'])
+            ->get('/qr-check-in/{siteQrLink}/poster', QrPosterController::class)
+            ->can('view', 'siteQrLink')
+            ->name('qr-check-in.poster');
 
         Kiosk::created(fn (Kiosk $kiosk) => $this->app->make(AuditLogger::class)->record('kiosk.created', subject: $kiosk, site: $kiosk->site_id));
         Kiosk::updated(function (Kiosk $kiosk): void {
@@ -84,6 +94,7 @@ class PublicVisitServiceProvider extends ServiceProvider
     {
         $key = fn (Request $request, string $name): string => $name.'|'.$request->ip().'|'.(string) $request->attributes->get('public_context', '-');
 
+        RateLimiter::for('public-visit-page', fn (Request $request) => Limit::perMinute(30)->by('visit-page|'.$request->ip()));
         RateLimiter::for('public-kiosk-enrol', fn (Request $request) => Limit::perMinute(5)->by('kiosk-enrol|'.$request->ip()));
         RateLimiter::for('public-host-search', fn (Request $request) => Limit::perMinute(30)->by($key($request, 'hosts')));
         RateLimiter::for('public-arrival', fn (Request $request) => Limit::perMinute(10)->by($key($request, 'arrival')));

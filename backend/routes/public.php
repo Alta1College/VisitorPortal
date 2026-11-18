@@ -18,13 +18,14 @@
 | upstream Livewire components or Filament actions, and must never accept database ids.
 | See docs/fork/phase-4-public-boundary.md.
 |
-| Phase 6 adds QR/mobile, Phase 7 email sign-out.
+| Phase 7 adds email sign-out.
 |
 */
 
 use App\Kiosk\Http\KioskEnrolmentController;
 use App\Kiosk\Http\RequireKioskDevice;
 use App\Kiosk\Livewire\KioskScreen;
+use App\QrCheckIn\Livewire\MobileSignIn;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/kiosk/enrol', [KioskEnrolmentController::class, 'show'])->name('kiosk.enrol');
@@ -35,3 +36,10 @@ Route::post('/kiosk/enrol', [KioskEnrolmentController::class, 'store'])
 Route::get('/kiosk', KioskScreen::class)
     ->middleware(RequireKioskDevice::class)
     ->name('kiosk');
+
+// Mobile check-in from a site's QR code. The token is checked inside the component on every
+// request (Livewire updates bypass route middleware).
+Route::get('/visit/{token}', MobileSignIn::class)
+    ->where('token', '[A-Za-z0-9]{32,64}')
+    ->middleware('throttle:public-visit-page')
+    ->name('visit');

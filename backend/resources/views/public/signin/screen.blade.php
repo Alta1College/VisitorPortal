@@ -3,7 +3,7 @@
 @php
     use App\VisitorWorkflow\Models\FormField;
     use App\VisitorWorkflow\Models\VisitorType;
-    $idleMs = max(15, (int) $kiosk->idle_timeout_seconds) * 1000;
+    $idleMs = $idleSeconds !== null ? $idleSeconds * 1000 : null;
 @endphp
 <div
     class="brand-on-primary flex min-h-dvh flex-col px-6 py-6 sm:px-12 sm:py-10"
@@ -13,7 +13,10 @@
             clearTimeout(this.timer);
             const step = $wire.step;
             if (step === 'welcome') return;
-            const ms = step === 'done' ? 10000 : {{ $idleMs }};
+            @if ($mode !== 'kiosk')
+            return; // the visitor's own phone: nothing to clear for the next person
+            @endif
+            const ms = step === 'done' ? 10000 : {{ $idleMs ?? 90000 }};
             this.timer = setTimeout(() => $wire.restart(), ms);
         },
     }"
@@ -55,7 +58,12 @@
 
             <footer class="mt-auto flex items-end justify-between gap-6 pt-10">
                 <p class="max-w-sm text-base text-base-content">{{ __('Zum Abmelden wenden Sie sich bitte an den Empfang.') }}</p>
-                {{-- Phase 6 adds the mobile check-in QR code here (bottom right). --}}
+                @if ($welcomeQr)
+                    <figure class="flex shrink-0 flex-col items-center gap-2">
+                        <div class="size-36 rounded-2xl bg-white p-2 shadow-sm [&>svg]:size-full sm:size-40" aria-hidden="true">{!! $welcomeQr !!}</div>
+                        <figcaption class="text-sm font-semibold">{{ __('Mobil anmelden') }}</figcaption>
+                    </figure>
+                @endif
             </footer>
         </main>
     @else
@@ -93,7 +101,7 @@
                     @foreach ($hostResults as $index => $option)
                         <button type="button" wire:click="chooseHost({{ $index }})" wire:key="host-{{ $index }}" class="btn btn-outline kiosk-tap justify-start border-2 text-2xl">{{ $option['name'] }}</button>
                     @endforeach
-                    @if (mb_strlen(trim($hostQuery)) >= 2 && $hostResults === [])
+                    @if (mb_strlen(trim($hostQuery)) >= $minHostQuery && $hostResults === [])
                         <p class="text-base-content">{{ __('Niemand gefunden. Bitte prüfen Sie die Schreibweise oder wenden Sie sich an den Empfang.') }}</p>
                     @endif
                 </div>

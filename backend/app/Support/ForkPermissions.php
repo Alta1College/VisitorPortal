@@ -26,11 +26,14 @@ final class ForkPermissions
     /** Register, set up and revoke kiosk devices. */
     public const MANAGE_KIOSKS = 'Manage:Kiosks';
 
+    public const MANAGE_QR_CHECK_IN = 'Manage:QrCheckIn';
+
     public const ADMIN = [
         self::MANAGE_ORGANISATION_SETTINGS,
         self::MANAGE_SITE_SETTINGS,
         self::VIEW_AUDIT_EVENTS,
         self::MANAGE_VISITOR_WORKFLOW,
         self::MANAGE_KIOSKS,
+        self::MANAGE_QR_CHECK_IN,
     ];
 }
