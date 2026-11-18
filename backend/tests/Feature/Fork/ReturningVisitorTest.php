@@ -188,7 +188,7 @@ class ReturningVisitorTest extends TestCase
             ->assertSee(__('Willkommen zurück, :name!', ['name' => 'Casey']))
             ->assertSee('c•••@s•••.example')->assertSee('•••• 678')
             ->assertDontSee('Contractor')->assertDontSee('returning-photo')
-            ->assertSee(__('Das bin ich nicht'))->assertDontSee(__('Nicht ich – vergessen'))
+            ->assertSee(__('Das bin ich nicht'))
             ->call('confirmReturning')
             ->call('submitDetails')->assertHasNoErrors()->assertSet('step', 'questions')
             ->assertSet('answers', [])->assertSet('savedAnswerKeys', ['wwcc', 'photo']);
@@ -205,7 +205,7 @@ class ReturningVisitorTest extends TestCase
         $this->assertSame(2, VisitResponse::query()->where('field_key', 'wwcc')->count());
     }
 
-    public function test_a_phone_remembers_details_only_when_asked_and_can_forget_them(): void
+    public function test_the_phone_keeps_nothing_and_always_looks_up_the_database(): void
     {
         $link = app(SiteQrLinks::class)->forSite($this->site);
 
@@ -215,18 +215,18 @@ class ReturningVisitorTest extends TestCase
             ->set('details.phone', '0499 111 222')->set('details.company', 'Acme')
             ->call('submitDetails')
             ->set('answers.wwcc', 'W-1')->set('answers.reason', 'R')->set('answers.photo', $this->photo())
-            ->call('submitQuestions')->set('rememberMe', true)->call('finish')->assertSet('step', 'done');
+            ->call('submitQuestions')->call('finish')->assertSet('step', 'done');
 
-        $cookie = Cookie::queued(ReturningVisitors::REMEMBER_COOKIE);
-        $this->assertNotNull($cookie);
-        $this->assertTrue($cookie->isHttpOnly());
+        // Only the sign-out cookie of the open visit: no saved details on the phone.
+        $this->assertSame([MobileSignIn::DEPARTURE_COOKIE], array_values(array_map(fn ($cookie) => $cookie->getName(), Cookie::getQueuedCookies())));
 
-        Livewire::withCookie(ReturningVisitors::REMEMBER_COOKIE, $cookie->getValue())->test(MobileSignIn::class, ['token' => $link->token])
-            ->call('chooseType', 'contractor')->assertSet('step', 'details')
+        $departure = Cookie::queued(MobileSignIn::DEPARTURE_COOKIE)->getValue();
+        Livewire::withCookie(MobileSignIn::DEPARTURE_COOKIE, $departure)->test(MobileSignIn::class, ['token' => $link->token])
+            ->call('chooseType', 'contractor')->assertSet('step', 'identify')->assertSet('pendingReturningToken', null)
+            ->set('lookupIdentifier', '0499111222')->call('lookupReturning')
             ->assertSee(__('Willkommen zurück, :name!', ['name' => 'Robin']))->assertSee('•••• 222')
-            ->assertSee(__('Nicht ich – vergessen'))
-            ->call('forgetMe')->assertSet('pendingReturningToken', null);
-        $this->assertTrue(Cookie::queued(ReturningVisitors::REMEMBER_COOKIE)->getExpiresTime() < time());
+            // Someone else on a borrowed phone: back to the lookup, nothing kept.
+            ->call('declineReturning')->assertSet('pendingReturningToken', null)->assertSet('step', 'identify');
     }
 
     public function test_the_saved_photo_is_served_only_to_kiosks_of_the_site(): void

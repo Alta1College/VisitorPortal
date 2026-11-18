@@ -126,11 +126,7 @@
                         </div>
                         <div class="flex flex-wrap gap-3">
                             <button type="button" wire:click="confirmReturning" class="btn btn-primary kiosk-tap flex-1">{{ __('Das bin ich') }}</button>
-                            @if ($mode === 'mobile' && $rememberedOffer)
-                                <button type="button" wire:click="forgetMe" class="btn btn-ghost kiosk-tap">{{ __('Nicht ich – vergessen') }}</button>
-                            @else
-                                <button type="button" wire:click="declineReturning" class="btn btn-ghost kiosk-tap">{{ __('Das bin ich nicht') }}</button>
-                            @endif
+                            <button type="button" wire:click="declineReturning" class="btn btn-ghost kiosk-tap">{{ __('Das bin ich nicht') }}</button>
                         </div>
                     </div>
                 @endif
@@ -313,12 +309,6 @@
                     @endif
                 </dl>
                 @if ($instructions)<p class="rounded-box bg-base-200 p-4 text-lg">{{ $instructions }}</p>@endif
-                @if ($mode === 'mobile' && $returningEnabled)
-                    <label class="flex cursor-pointer items-start gap-4 rounded-box border border-base-300 p-4">
-                        <input type="checkbox" wire:model="rememberMe" class="checkbox checkbox-primary checkbox-lg mt-1">
-                        <span class="text-lg">{{ __('Meine Angaben auf diesem Handy merken, damit ich sie beim nächsten Besuch nicht neu eingeben muss.') }}</span>
-                    </label>
-                @endif
                 <div class="mt-auto flex gap-3">
                     <button type="button" wire:click="back" class="btn btn-ghost kiosk-tap px-6">{{ __('Zurück') }}</button>
                     <button type="button" wire:click="finish" wire:loading.attr="disabled" class="btn btn-primary kiosk-tap flex-1 text-2xl">

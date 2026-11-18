@@ -29,22 +29,14 @@ use Illuminate\Support\Facades\Storage;
  *   QR page is internet-reachable) only a masked summary is shown and saved values are merged
  *   in on the server at submit, so knowing someone's email address never reveals their details
  *   or photo there.
- * - On a personal phone the visitor may opt in to "remember me": a long-lived encrypted token
- *   in a cookie on that phone only.
  */
 class ReturningVisitors
 {
     public const PURPOSE_CONFIRMED = 'confirmed';
 
-    public const PURPOSE_REMEMBER = 'remember';
-
     public const CONFIRMED_TTL_MINUTES = 30;
 
-    public const REMEMBER_TTL_DAYS = 180;
-
     public const PHOTO_TTL_MINUTES = 30;
-
-    public const REMEMBER_COOKIE = 'vp_remember';
 
     /** Detail fields that can be filled from a saved record. */
     public const SAVED_FIELDS = ['first_name', 'name', 'email', 'phone', 'company'];
@@ -75,9 +67,7 @@ class ReturningVisitors
 
     public function token(Visitor $visitor, string $purpose = self::PURPOSE_CONFIRMED): string
     {
-        $expires = $purpose === self::PURPOSE_REMEMBER
-            ? now()->addDays(self::REMEMBER_TTL_DAYS)
-            : now()->addMinutes(self::CONFIRMED_TTL_MINUTES);
+        $expires = now()->addMinutes(self::CONFIRMED_TTL_MINUTES);
 
         return Crypt::encryptString(json_encode(['p' => $visitor->getKey(), 'u' => $purpose, 'e' => $expires->timestamp]));
     }
@@ -95,7 +85,7 @@ class ReturningVisitors
         }
 
         if (! is_array($payload) || ($payload['e'] ?? 0) < now()->timestamp
-            || ! in_array($payload['u'] ?? null, [self::PURPOSE_CONFIRMED, self::PURPOSE_REMEMBER], true)) {
+            || ! in_array($payload['u'] ?? null, [self::PURPOSE_CONFIRMED], true)) {
             return null;
         }
 

@@ -145,9 +145,9 @@ abstract class VisitorSignIn extends Component
         $this->typeSlug = $type->slug;
         $this->answers = [];
         $this->accepted = [];
-        // Details remembered on this phone are offered straight away; otherwise start with
-        // "email or mobile number" so a returning visitor's record can be loaded.
-        $this->step = $this->pendingReturningToken === null && $this->stepApplies('identify') ? 'identify' : 'details';
+        $this->clearReturning();
+        // Start with "email or mobile number" so a returning visitor's record can be loaded.
+        $this->step = $this->stepApplies('identify') ? 'identify' : 'details';
     }
 
     public function submitDetails(): void
@@ -307,9 +307,6 @@ abstract class VisitorSignIn extends Component
     /** Screens may keep something on the device after sign-in (the phone keeps a sign-out cookie). */
     protected function afterArrival(ArrivalResult $result): void {}
 
-    /** Screens may restore state after a reset (the phone re-offers remembered details). */
-    protected function afterRestart(): void {}
-
     /**
      * Clear everything the visitor entered (inactivity, cancel, or after the success screen).
      */
@@ -320,7 +317,6 @@ abstract class VisitorSignIn extends Component
         $this->clearSignOut();
         $this->resetErrorBag();
         $this->submissionKey = (string) Str::uuid();
-        $this->afterRestart();
     }
 
     public function render(): View

@@ -28,7 +28,7 @@ trait RecognisesReturningVisitors
     #[Locked]
     public ?string $returningToken = null;
 
-    /** Found (or remembered on this phone) but not yet confirmed. */
+    /** Found by email or mobile number but not yet confirmed. */
     #[Locked]
     public ?string $pendingReturningToken = null;
 
@@ -43,10 +43,6 @@ trait RecognisesReturningVisitors
     /** @var list<string> remembered answers that are not on screen (files, sensitive, phones) */
     #[Locked]
     public array $savedAnswerKeys = [];
-
-    /** The offer came from details remembered on this phone (so "not me" also forgets them). */
-    #[Locked]
-    public bool $rememberedOffer = false;
 
     public string $lookupIdentifier = '';
 
@@ -134,6 +130,11 @@ trait RecognisesReturningVisitors
         $this->clearReturning();
         $this->details = ['first_name' => null, 'name' => null, 'email' => null, 'phone' => null, 'company' => null];
         $this->answers = [];
+
+        // Someone else (e.g. on a borrowed phone): let them look up their own record.
+        if ($this->stepApplies('identify')) {
+            $this->step = 'identify';
+        }
     }
 
     protected function offerReturning(Visitor $visitor): void
@@ -142,7 +143,6 @@ trait RecognisesReturningVisitors
 
         $this->pendingReturningToken = $returning->token($visitor);
         $this->returningSummary = $returning->summary($visitor, $this->showsSavedValues());
-        $this->rememberedOffer = false;
         $this->returningToken = null;
         $this->savedFields = [];
         $this->savedAnswerKeys = [];
@@ -150,7 +150,6 @@ trait RecognisesReturningVisitors
 
     protected function clearReturning(): void
     {
-        $this->rememberedOffer = false;
         $this->returningToken = null;
         $this->pendingReturningToken = null;
         $this->returningSummary = [];

@@ -51,9 +51,9 @@ reason for visit off). Signatures, checkboxes and acknowledgements are always gi
   therefore never reveals their details or photo on a phone.
 - A reused photo or file is copied into the new visit, so each visit keeps its own evidence and
   the evidence retention purge still works per visit; once purged, it is no longer offered.
-- **Phone remember-me:** on the confirm step the visitor may tick "Remember my details on this
-  phone": an encrypted token (180 days, HttpOnly cookie on that phone only) that skips the
-  lookup next time; "Not me – forget" deletes the cookie.
+- **Nothing is remembered on the device.** Records are always found in the database by email or
+  mobile number, on the kiosk and on phones alike. The only cookie a phone gets is the sign-out
+  cookie of a visit that is still open (below). "That's not me" returns to the lookup.
 - `RegisterArrival` reuses the confirmed visitor record (refreshing any details typed this time)
   instead of creating a duplicate, and signs them out of an earlier visit at the same site they
   forgot to end, so roll call lists them once (audited `public.arrival.closed_previous`).
@@ -62,7 +62,7 @@ reason for visit off). Signatures, checkboxes and acknowledgements are always gi
 
 | # | Threat | Control |
 |---|---|---|
-| 4 | Visitor data leak via matching | Exact email or mobile only, 10 lookups/min per kiosk or phone address, confirmation required; full record and photo only on enrolled kiosks (on site); phones get a masked summary with values merged server-side; per-question opt-in to remember answers; remember-me opt-in on the visitor's own phone |
+| 4 | Visitor data leak via matching | Exact email or mobile only, 10 lookups/min per kiosk or phone address, confirmation required; full record and photo only on enrolled kiosks (on site); phones get a masked summary with values merged server-side; per-question opt-in to remember answers; nothing stored on devices |
 | 5 | Sign-out abuse | Unattended kiosk: exact full name + confirm, 10 lookups/min; staffed: suggestions 30/min; option tokens encrypted, site-bound, 10 min; email link POST-only, single use, 36 h; phone cookie HttpOnly |
 | new | Signing someone else out at an unattended kiosk | Requires their exact full name; audited with channel; reception still sees the attendance history |
 
@@ -82,5 +82,5 @@ no-address cases; kiosk lookup by mobile in another format loads details, rememb
 and photo (reason asked again, photo copied into the new visit); partial values reveal nothing
 and carry into the form; record reused and updated, forgotten sign-in closed; decline and
 setting off; phone lookup keeps every saved value out of component state and still signs in;
-phone remember-me opt-in and forget; photo route refuses non-kiosks, other sites and bad
+phone keeps only the sign-out cookie and looks up the database on every visit; photo route refuses non-kiosks, other sites and bad
 tokens; masks.
