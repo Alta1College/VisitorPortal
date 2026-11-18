@@ -61,6 +61,8 @@ final class SettingFields
             'organisation.visitor_experience.heading_policies' => ['Überschrift: Richtlinien', 'Leer: „Bitte lesen und bestätigen“'],
             'organisation.visitor_experience.heading_confirm' => ['Überschrift: Bestätigen', 'Leer: „Alles richtig?“'],
             'organisation.visitor_experience.heading_done' => ['Überschrift nach der Anmeldung', 'Leer: „Danke, :name!“. :name wird durch den Vornamen ersetzt.'],
+            'organisation.visitor_experience.returning_visitors' => ['Wiederkehrende Besucher erkennen', 'Besucher können gespeicherte Angaben mit exakter E-Mail-Adresse oder Handynummer und Nachname wiederverwenden; auf dem eigenen Handy auf Wunsch gemerkt. Standard: Ja.'],
+            'organisation.visitor_experience.email_sign_out_link' => ['Abmeldelink per E-Mail senden', 'Besucher mit E-Mail-Adresse erhalten nach der Anmeldung einen einmaligen Link zum Abmelden. Standard: Ja.'],
             'organisation.visitor_experience.sign_in_label' => ['Beschriftung „Anmelden“'],
             'organisation.visitor_experience.sign_out_label' => ['Beschriftung „Abmelden“'],
             'organisation.visitor_experience.visitor_instructions' => ['Hinweise für Besucher'],

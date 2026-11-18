@@ -12,7 +12,10 @@ use App\HostDirectory\HostDirectory;
 use App\Models\Site;
 use App\PublicVisit\Channel;
 use App\PublicVisit\Commands\ArrivalRequest;
+use App\PublicVisit\Commands\ArrivalResult;
 use App\PublicVisit\Commands\RegisterArrival;
+use App\PublicVisit\Livewire\Concerns\RecognisesReturningVisitors;
+use App\PublicVisit\Livewire\Concerns\SignsVisitorsOut;
 use App\PublicVisit\VisitorDetails;
 use App\Settings\SettingsRepository;
 use App\VisitorWorkflow\ConditionEvaluator;
@@ -42,9 +45,11 @@ use Livewire\WithFileUploads;
  */
 abstract class VisitorSignIn extends Component
 {
+    use RecognisesReturningVisitors;
+    use SignsVisitorsOut;
     use WithFileUploads;
 
-    public const STEPS = ['welcome', 'details', 'host', 'questions', 'policies', 'confirm', 'done'];
+    public const STEPS = ['welcome', 'identify', 'details', 'host', 'questions', 'policies', 'confirm', 'done'];
 
     public string $step = 'welcome';
 
@@ -104,6 +109,12 @@ abstract class VisitorSignIn extends Component
         return 2;
     }
 
+    /** First name of the visitor signed in on this device, if the screen can tell (phones). */
+    protected function activeVisitName(): ?string
+    {
+        return null;
+    }
+
     /** SVG of the mobile check-in QR code for the welcome screen, if offered. */
     protected function welcomeQr(): ?string
     {
@@ -134,7 +145,9 @@ abstract class VisitorSignIn extends Component
         $this->typeSlug = $type->slug;
         $this->answers = [];
         $this->accepted = [];
-        $this->step = 'details';
+        $this->clearReturning();
+        // Start with "email or mobile number" so a returning visitor's record can be loaded.
+        $this->step = $this->stepApplies('identify') ? 'identify' : 'details';
     }
 
     public function submitDetails(): void
@@ -142,7 +155,7 @@ abstract class VisitorSignIn extends Component
         $this->resetErrorBag();
 
         try {
-            VisitorDetails::validate($this->details, $this->visitorType());
+            VisitorDetails::validate($this->detailsForValidation(), $this->visitorType());
         } catch (ValidationException $e) {
             $this->addErrorsUnder('details', $e);
 
@@ -208,7 +221,7 @@ abstract class VisitorSignIn extends Component
         $this->resetErrorBag();
 
         try {
-            app(ResponseValidator::class)->validate($this->definition(), $this->preparedAnswers(), [], checkPolicies: false);
+            app(ResponseValidator::class)->validate($this->definition(), $this->answersForValidation($this->preparedAnswers()), [], checkPolicies: false);
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
 
@@ -235,6 +248,15 @@ abstract class VisitorSignIn extends Component
 
     public function back(): void
     {
+        $special = ['signout' => 'welcome', 'signout_confirm' => 'signout'];
+
+        if (isset($special[$this->step])) {
+            $this->resetErrorBag();
+            $this->step = $special[$this->step];
+
+            return;
+        }
+
         $order = array_values(array_filter(self::STEPS, fn (string $s): bool => $this->stepApplies($s)));
         $index = array_search($this->step, $order, true);
 
@@ -267,6 +289,7 @@ abstract class VisitorSignIn extends Component
                 answers: $this->preparedAnswers(),
                 acceptedPolicyVersionIds: $acceptedIds,
                 kioskId: $this->kioskId(),
+                returningToken: $this->returningToken,
             ));
         } catch (ValidationException $e) {
             $this->returnToStepFor($e);
@@ -276,15 +299,22 @@ abstract class VisitorSignIn extends Component
 
         $this->doneFirstName = $result->visitorFirstName;
         $this->doneHostName = $result->hostDisplayName;
+        $this->afterArrival($result);
+        $this->clearReturning();
         $this->step = 'done';
     }
+
+    /** Screens may keep something on the device after sign-in (the phone keeps a sign-out cookie). */
+    protected function afterArrival(ArrivalResult $result): void {}
 
     /**
      * Clear everything the visitor entered (inactivity, cancel, or after the success screen).
      */
     public function restart(): void
     {
-        $this->reset(['step', 'typeSlug', 'details', 'hostQuery', 'hostResults', 'hostToken', 'hostName', 'answers', 'accepted', 'doneFirstName', 'doneHostName']);
+        $this->reset(['step', 'typeSlug', 'details', 'hostQuery', 'hostResults', 'hostToken', 'hostName', 'answers', 'accepted', 'doneFirstName', 'doneHostName', 'goodbyeName', 'lookupIdentifier']);
+        $this->clearReturning();
+        $this->clearSignOut();
         $this->resetErrorBag();
         $this->submissionKey = (string) Str::uuid();
     }
@@ -325,6 +355,15 @@ abstract class VisitorSignIn extends Component
             'detailFields' => $this->typeSlug !== null ? VisitorDetails::visible($this->visitorType()) : [],
             'detailLabels' => $this->typeSlug !== null ? VisitorDetails::labels($this->visitorType()) : [],
             'detailRequired' => $this->typeSlug !== null ? VisitorDetails::required($this->visitorType()) : [],
+            'returningEnabled' => $this->returningEnabled(),
+            'returningPhoto' => in_array($this->step, ['details', 'confirm'], true) ? $this->returningPhotoUrl() : null,
+            'savedPhotos' => $this->step === 'questions' ? $this->savedAnswerPhotos() : [],
+            'identifyFields' => $this->typeSlug !== null ? array_values(array_intersect(['email', 'phone'], VisitorDetails::visible($this->visitorType()))) : [],
+            'nameSignOut' => $this->nameSignOutEnabled(),
+            'staffed' => $this->staffed(),
+            'activeVisitName' => $this->step === 'welcome' ? $this->activeVisitName() : null,
+            'signOutLabel' => config('organisation.visitor_experience.sign_out_label') ?: __('Besuch beenden'),
+            'signOutConfirmation' => $settings->get('organisation.visitor_experience.sign_out_confirmation'),
         ])->layout('public.signin.layout', ['siteName' => $site->name, 'mode' => $this->mode()]);
     }
 
@@ -350,7 +389,7 @@ abstract class VisitorSignIn extends Component
         return VisitorType::query()->availableAt($this->site())->get()->all();
     }
 
-    private function visitorType(): VisitorType
+    protected function visitorType(): VisitorType
     {
         $type = $this->typeSlug !== null ? collect($this->types())->firstWhere('slug', $this->typeSlug) : null;
 
@@ -363,7 +402,7 @@ abstract class VisitorSignIn extends Component
         return $type;
     }
 
-    private function definition(): WorkflowDefinition
+    protected function definition(): WorkflowDefinition
     {
         try {
             return app(WorkflowResolver::class)->resolve($this->site(), $this->visitorType());
@@ -440,6 +479,7 @@ abstract class VisitorSignIn extends Component
         $definition = $this->definition();
 
         return match ($step) {
+            'identify' => $this->returningEnabled() && array_intersect(['email', 'phone'], VisitorDetails::visible($this->visitorType())) !== [],
             'host' => $this->visitorType()->host_requirement !== VisitorType::HOST_NONE,
             'questions' => $definition->fields !== [],
             'policies' => $definition->policies !== [],

@@ -10,6 +10,7 @@ namespace App\QrCheckIn;
 
 use App\Audit\AuditLogger;
 use App\Models\Site;
+use App\PublicVisit\PublicUrl;
 use BaconQrCode\Renderer\Color\Rgb;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -66,9 +67,7 @@ class SiteQrLinks
      */
     public function url(SiteQrLink $link): string
     {
-        $base = config('organisation.public_url') ?: (app()->runningInConsole() ? config('app.url') : request()->root());
-
-        return rtrim((string) $base, '/').'/visit/'.$link->token;
+        return PublicUrl::to('visit/'.$link->token);
     }
 
     public function svg(string $url, int $size = 320): string

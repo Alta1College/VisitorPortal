@@ -14,7 +14,11 @@ use App\HostDirectory\HostDirectory;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\Visitor;
+use App\PublicVisit\ActiveAttendances;
 use App\PublicVisit\AttendanceTokens;
+use App\PublicVisit\Mail\SignOutLinkMail;
+use App\PublicVisit\PublicUrl;
+use App\PublicVisit\ReturningVisitors;
 use App\PublicVisit\VisitorDetails;
 use App\Services\VisitActionService;
 use App\Services\WalkInVisitService;
@@ -26,6 +30,7 @@ use App\VisitorWorkflow\WorkflowResolver;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Throwable;
@@ -50,6 +55,8 @@ class RegisterArrival
         private readonly AttendanceTokens $tokens,
         private readonly SettingsRepository $settings,
         private readonly AuditLogger $audit,
+        private readonly ReturningVisitors $returning,
+        private readonly ActiveAttendances $attendances,
     ) {}
 
     /**
@@ -69,13 +76,25 @@ class RegisterArrival
             throw ValidationException::withMessages(['visitor_type' => __('Dieser Besuchertyp ist hier nicht verfügbar.')]);
         }
 
-        $details = $this->validateDetails($request->details, $request->visitorType);
+        $returning = $this->returning->resolve($request->returningToken);
+        $typed = $returning !== null ? $this->returning->merge($returning, $request->details) : $request->details;
+        $details = $this->validateDetails($typed, $request->visitorType);
         $host = $this->resolveHost($request);
-        $workflow = $this->validator->validate($definition, $request->answers, $request->acceptedPolicyVersionIds);
+        // Remembered answers (and photos) fill questions the returning visitor left empty.
+        $answers = $returning !== null ? $this->returning->mergeAnswers($returning, $definition, $request->answers) : $request->answers;
+        $workflow = $this->validator->validate($definition, $answers, $request->acceptedPolicyVersionIds);
 
         try {
-            [$visit, $visitor, $token] = DB::transaction(function () use ($request, $details, $host, $workflow, $keyHash): array {
-                $visitor = Visitor::query()->create([...$details, 'created_by_user_id' => null]);
+            [$visit, $visitor, $token] = DB::transaction(function () use ($request, $details, $host, $workflow, $keyHash, $returning): array {
+                if ($returning !== null) {
+                    // Returning visitor (confirmed on screen): keep one record, refresh its details,
+                    // and close a sign-in at this site they forgot to end, so roll call lists them once.
+                    $returning->fill(array_filter($details, fn ($value) => $value !== null))->save();
+                    $visitor = $returning;
+                    $this->closeForgottenAttendances($request, $visitor);
+                } else {
+                    $visitor = Visitor::query()->create([...$details, 'created_by_user_id' => null]);
+                }
 
                 $visit = $this->walkIns->createVisit(
                     $visitor,
@@ -122,9 +141,73 @@ class RegisterArrival
             'visitor_id' => $visitor->getKey(),
             'visitor_type' => $request->visitorType->slug,
             'host_source' => $request->hostToken !== null ? 'selected' : 'reception_fallback',
+            'returning' => $returning !== null,
         ]);
 
+        $this->sendSignOutLink($request, $visitor, $token);
+
         return new ArrivalResult($token, (string) $visitor->first_name, $this->displayName($host), false, $visit->getKey(), $visitor->getKey());
+    }
+
+    /**
+     * Sign the returning visitor out of earlier, still-open attendances at this site.
+     */
+    private function closeForgottenAttendances(ArrivalRequest $request, Visitor $visitor): void
+    {
+        foreach ($this->attendances->activeVisitIdsFor($request->site, $visitor) as $visitId) {
+            $previous = Visit::query()->find($visitId);
+
+            if ($previous === null) {
+                continue;
+            }
+
+            $this->visitActions->checkOutParticipant($previous, $visitor, null);
+            DB::table('visit_visitor')
+                ->where('visit_id', $visitId)
+                ->where('visitor_id', $visitor->getKey())
+                ->update(['checked_out_via' => $request->channel->value]);
+            $this->tokens->invalidateFor($visitId, $visitor->getKey());
+
+            $this->audit->record('public.arrival.closed_previous', subject: $previous, site: $request->site, context: [
+                'channel' => $request->channel->value,
+                'visitor_id' => $visitor->getKey(),
+            ]);
+        }
+    }
+
+    /**
+     * Email a one-time sign-out link when the visitor gave an address and the organisation
+     * allows it. Sent after the response (not queued: the plain token is never stored), and a
+     * mail failure never undoes the sign-in.
+     */
+    private function sendSignOutLink(ArrivalRequest $request, Visitor $visitor, string $token): void
+    {
+        $settings = $this->settings->forSite($request->site);
+
+        if (blank($visitor->email) || (string) $settings->get('organisation.visitor_experience.email_sign_out_link') === '0') {
+            return;
+        }
+
+        $mail = new SignOutLinkMail(
+            (string) $visitor->first_name,
+            (string) $request->site->name,
+            PublicUrl::to('leave/'.$token),
+            AttendanceTokens::DEPARTURE_TTL_HOURS,
+        );
+        $mail->locale(app()->getLocale());
+        $email = (string) $visitor->email;
+        $siteId = $request->site->getKey();
+        $visitorId = $visitor->getKey();
+
+        dispatch(function () use ($email, $mail, $siteId, $visitorId): void {
+            try {
+                Mail::to($email)->send($mail);
+                app(AuditLogger::class)->record('public.departure_link.sent', site: $siteId, context: ['visitor_id' => $visitorId]);
+            } catch (Throwable $e) {
+                report($e);
+                app(AuditLogger::class)->record('public.departure_link.failed', result: AuditEvent::RESULT_FAILURE, site: $siteId, context: ['visitor_id' => $visitorId]);
+            }
+        })->afterResponse();
     }
 
     private function submissionKeyHash(ArrivalRequest $request): string

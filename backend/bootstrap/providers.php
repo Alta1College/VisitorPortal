@@ -7,6 +7,7 @@
  */
 
 use App\Audit\AuditServiceProvider;
+use App\Messaging\MessagingServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
 use App\Providers\FortifyServiceProvider;
@@ -20,6 +21,7 @@ return [
     SettingsServiceProvider::class,
     VisitorWorkflowServiceProvider::class,
     PublicVisitServiceProvider::class,
+    MessagingServiceProvider::class,
     AppServiceProvider::class,
     FortifyServiceProvider::class,
     AdminPanelProvider::class,

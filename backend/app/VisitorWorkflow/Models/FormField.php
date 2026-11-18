@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array<string, mixed>|null $validation
  * @property array{match?: string, rules?: list<array{field: string, operator: string, value?: mixed}>}|null $conditions
  * @property bool $is_sensitive
+ * @property bool $remember_for_returning
  * @property bool $is_active
  */
 class FormField extends Model
@@ -54,6 +55,17 @@ class FormField extends Model
 
     public const FILE_TYPES = [self::TYPE_PHOTO, self::TYPE_SIGNATURE, self::TYPE_FILE];
 
+    /** Types whose answer may be pre-filled for returning visitors. Consent and signatures are always given afresh. */
+    public const REMEMBERABLE_TYPES = [
+        self::TYPE_SHORT_TEXT, self::TYPE_LONG_TEXT, self::TYPE_EMAIL, self::TYPE_PHONE, self::TYPE_NUMBER,
+        self::TYPE_DATE, self::TYPE_YES_NO, self::TYPE_DROPDOWN, self::TYPE_PHOTO, self::TYPE_FILE,
+    ];
+
+    public function remembersAnswer(): bool
+    {
+        return $this->remember_for_returning && in_array($this->type, self::REMEMBERABLE_TYPES, true);
+    }
+
     /**
      * @var list<string>
      */
@@ -68,6 +80,7 @@ class FormField extends Model
         'is_sensitive',
         'show_on_badge',
         'show_on_roll_call',
+        'remember_for_returning',
         'is_active',
     ];
 
@@ -75,6 +88,7 @@ class FormField extends Model
         'is_sensitive' => false,
         'show_on_badge' => false,
         'show_on_roll_call' => false,
+        'remember_for_returning' => false,
         'is_active' => true,
     ];
 
@@ -85,6 +99,7 @@ class FormField extends Model
         'is_sensitive' => 'boolean',
         'show_on_badge' => 'boolean',
         'show_on_roll_call' => 'boolean',
+        'remember_for_returning' => 'boolean',
         'is_active' => 'boolean',
     ];
 

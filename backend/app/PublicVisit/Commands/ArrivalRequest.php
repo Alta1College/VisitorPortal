@@ -35,5 +35,7 @@ final class ArrivalRequest
         public readonly array $acceptedPolicyVersionIds,
         /** Set by the server from the enrolled device, never by the visitor. */
         public readonly ?int $kioskId = null,
+        /** Confirmed returning-visitor token (ReturningVisitors): reuse that visitor record. */
+        public readonly ?string $returningToken = null,
     ) {}
 }
