@@ -135,6 +135,10 @@ class RegisterArrival
             throw $exception;
         }
 
+        // Queued before the host and sign-out emails so the badge is first in line: the visitor
+        // is standing at the printer, the emails can wait a few seconds.
+        $badgeQueued = $this->queueBadge($request, $visit, $visitor);
+
         $this->checkIn($visit, $visitor);
 
         $this->audit->record('public.arrival.registered', subject: $visit, site: $request->site, context: [
@@ -147,7 +151,7 @@ class RegisterArrival
 
         $this->sendSignOutLink($request, $visitor, $token);
 
-        return new ArrivalResult($token, (string) $visitor->first_name, $this->displayName($host), false, $visit->getKey(), $visitor->getKey(), $this->queueBadge($request, $visit, $visitor));
+        return new ArrivalResult($token, (string) $visitor->first_name, $this->displayName($host), false, $visit->getKey(), $visitor->getKey(), $badgeQueued);
     }
 
     /**

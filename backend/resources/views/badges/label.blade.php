@@ -35,7 +35,7 @@
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .who { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 6px; padding: 18px 0; min-height: 0; }
-    .photo { width: 270px; height: 300px; object-fit: cover; border-radius: 24px; border: 6px solid #000; margin-bottom: 18px; filter: grayscale(1) contrast(1.15); }
+    .photo { width: 270px; height: 300px; object-fit: cover; border-radius: 24px; border: 6px solid #000; margin-bottom: 18px; filter: url(#photo-tone); }
     .photo.missing { display: flex; align-items: center; justify-content: center; border-style: dashed; font-size: 34px; font-weight: 700; }
     .first { font-size: {{ $nameSize }}px; font-weight: 800; line-height: 1.02; overflow-wrap: anywhere; }
     .last { font-size: {{ (int) round($nameSize * 0.55) }}px; font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; }
@@ -47,6 +47,31 @@
 </style>
 </head>
 <body>
+    {{-- Photo tone for a thermal head: greyscale, a little contrast, a slight shadow lift
+         (thermal dots spread, so prints come out darker than the screen), then squeeze into the
+         96–208 band that Bitmap::fromPng stretches back out. The photo then gets an even dither
+         instead of the text curve, which printed everything below mid-grey as solid black. --}}
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <filter id="photo-tone" color-interpolation-filters="sRGB">
+            <feColorMatrix type="saturate" values="0"/>
+            <feComponentTransfer>
+                <feFuncR type="linear" slope="1.2" intercept="-0.1"/>
+                <feFuncG type="linear" slope="1.2" intercept="-0.1"/>
+                <feFuncB type="linear" slope="1.2" intercept="-0.1"/>
+            </feComponentTransfer>
+            <feComponentTransfer>
+                <feFuncR type="gamma" amplitude="1" exponent="0.85" offset="0"/>
+                <feFuncG type="gamma" amplitude="1" exponent="0.85" offset="0"/>
+                <feFuncB type="gamma" amplitude="1" exponent="0.85" offset="0"/>
+            </feComponentTransfer>
+            <feComponentTransfer>
+                <feFuncR type="linear" slope="0.4392" intercept="0.3765"/>
+                <feFuncG type="linear" slope="0.4392" intercept="0.3765"/>
+                <feFuncB type="linear" slope="0.4392" intercept="0.3765"/>
+            </feComponentTransfer>
+        </filter>
+    </svg>
+
     <div class="top">
         @if ($badge->logo)
             <img class="logo" src="{{ $badge->logo }}" alt="">
