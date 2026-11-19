@@ -3,7 +3,7 @@ name: visitorportal-demo
 x-app-image: &app-image "${VISITORPORTAL_IMAGE:-ghcr.io/p0etinc0de/besucherportal:${VISITORPORTAL_VERSION:-latest}}"
 
 x-app-environment: &app-environment
-  APP_NAME: VisitorPortal
+  APP_NAME: Edu Visitor Portal
   APP_ENV: local
   APP_DEBUG: "true"
   APP_URL: http://localhost:8080
@@ -33,14 +33,14 @@ x-app-environment: &app-environment
   MAIL_PORT: "1025"
   MAIL_FROM_ADDRESS: visitorportal@example.test
   MAIL_FROM_NAME: VisitorPortal
-  BRANDING_NAME: VisitorPortal
+  BRANDING_NAME: Edu Visitor Portal
   BRANDING_LOGO_LIGHT: images/branding/logo-with-text-light.svg
   BRANDING_LOGO_DARK: images/branding/logo-with-text-dark.svg
   BRANDING_MAIL_LOGO: images/branding/logo-with-text-light.svg
   BRANDING_BADGE_LOGO: images/branding/logo-with-text-light.svg
   BRANDING_BADGE_DESIGN: standard
   BRANDING_BADGE_ACCENT_COLOR: "#ff8a00"
-  BRANDING_MONITOR_FALLBACK_HEADING: Welcome to VisitorPortal
+  BRANDING_MONITOR_FALLBACK_HEADING: Welcome to Edu Visitor Portal
   BRANDING_MONITOR_FALLBACK_SUBHEADING: We're glad you're here.
   BRANDING_MONITOR_SLIDE_HEADING: Welcome!
   GOTENBERG_URL: http://gotenberg:3000

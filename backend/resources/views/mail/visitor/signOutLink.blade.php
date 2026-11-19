@@ -1,4 +1,4 @@
-{{-- SPDX-FileCopyrightText: 2026 Jonathan Läpple and VisitorPortal contributors --}}
+{{-- SPDX-FileCopyrightText: 2026 Simon Grant --}}
 {{-- SPDX-License-Identifier: GPL-3.0-or-later --}}
 <x-mail.message_component :message="$message">
 # {{ __('Sie sind angemeldet') }}

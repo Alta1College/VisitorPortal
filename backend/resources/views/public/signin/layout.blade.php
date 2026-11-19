@@ -1,4 +1,4 @@
-{{-- SPDX-FileCopyrightText: 2026 Jonathan Läpple and VisitorPortal contributors --}}
+{{-- SPDX-FileCopyrightText: 2026 Simon Grant --}}
 {{-- SPDX-License-Identifier: GPL-3.0-or-later --}}
 {{-- Visitor sign-in layout (fork): kiosk and mobile. Touch-first, always the light theme, organisation colours from brand.css. --}}
 <!DOCTYPE html>

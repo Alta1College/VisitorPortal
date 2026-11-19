@@ -18,7 +18,7 @@ services:
       apache2-foreground
       "
     environment:
-      APP_NAME: VisitorPortal
+      APP_NAME: Edu Visitor Portal
       APP_ENV: testing
       APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       APP_DEBUG: "false"

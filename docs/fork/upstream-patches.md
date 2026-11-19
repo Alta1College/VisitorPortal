@@ -35,3 +35,8 @@ upstream merges can be reviewed quickly. New files added by the fork are not lis
 | `backend/lang/{en,de,fr,cs}.json` | Two missing upstream plurals (`:count Stunde…`, `:count Treffer…`) | German showed on the check-in/out board | 9 | Yes |
 | `backend/tests/Feature/Portal/CheckInOutBoardTest.php` | Two assertions use `trans_choice()` instead of literal German "Treffer" | The plural is now translated | 9 | Yes |
 | `backend/database/migrations/0000_01_01_000000_create_sites_table.php` | Default site timezone from `config('app.timezone')` | Remove hard-coded `Europe/Berlin` (new installs) | 9 | Yes |
+| `backend/config/app.php`, `backend/config/branding.php` | Default `APP_NAME`/`BRANDING_NAME` and monitor heading "Edu Visitor Portal" | Product name (still overridable by env) | Rename | No |
+| `backend/.env.example`, `docker-compose.{demo,prod,sso-test}.yml` | Default app and branding name "Edu Visitor Portal" | Product name | Rename | No |
+| `backend/lang/{en,de,fr,cs}.json` | Product name in the SSO two-factor note (values only) | Product name | Rename | No |
+| `README.md`, `README.de.md` | Title, intro, attribution to upstream, second copyright line | Product name and copyright for fork changes | Rename | No |
+| SPDX headers of changed upstream files | Extra `SPDX-FileCopyrightText: 2026 Simon Grant` line beneath upstream's | Copyright of fork changes | Rename | No |

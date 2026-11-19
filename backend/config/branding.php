@@ -2,6 +2,7 @@
 
 /**
  * SPDX-FileCopyrightText: 2026 Jonathan Läpple and VisitorPortal contributors
+ * SPDX-FileCopyrightText: 2026 Simon Grant
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -19,7 +20,7 @@ return [
     |
     */
 
-    'name' => env('BRANDING_NAME', 'VisitorPortal'),
+    'name' => env('BRANDING_NAME', 'Edu Visitor Portal'),
 
     'logo_light' => env('BRANDING_LOGO_LIGHT', 'images/branding/logo-with-text-light.svg'),
 
@@ -33,7 +34,7 @@ return [
 
     'badge_accent_color' => env('BRANDING_BADGE_ACCENT_COLOR', '#ff8a00'),
 
-    'monitor_fallback_heading' => env('BRANDING_MONITOR_FALLBACK_HEADING', 'Welcome to VisitorPortal'),
+    'monitor_fallback_heading' => env('BRANDING_MONITOR_FALLBACK_HEADING', 'Welcome to Edu Visitor Portal'),
 
     'monitor_fallback_subheading' => env('BRANDING_MONITOR_FALLBACK_SUBHEADING', "We're glad you're here."),
 

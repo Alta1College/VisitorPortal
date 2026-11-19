@@ -3,7 +3,7 @@ name: visitorportal-prod
 x-app-image: &app-image "${VISITORPORTAL_IMAGE:?VISITORPORTAL_IMAGE is required}"
 
 x-app-environment: &app-environment
-  APP_NAME: "${APP_NAME:-VisitorPortal}"
+  APP_NAME: "${APP_NAME:-Edu Visitor Portal}"
   APP_ENV: production
   APP_DEBUG: "false"
   APP_KEY: "${APP_KEY:?APP_KEY is required}"

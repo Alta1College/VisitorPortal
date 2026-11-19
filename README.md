@@ -2,17 +2,17 @@
 <img width="5197" height="2598" alt="VisitorPortalBannerEN" src="docs/assets/hero/VisitorPortalBannerEN.png" />
 </p>
 
-# VisitorPortal
+# Edu Visitor Portal
 
 [Deutsch](README.de.md)
 
-VisitorPortal is a web-based visitor management system for registering, managing and checking in company visitors.
+Edu Visitor Portal is a self-hosted visitor management system for schools and other multi-site organisations: kiosk and QR sign-in, returning visitors, label badges, sign-out links by email, an on-site register and emergency roll calls.
 
-It supports visitor pre-registration, reception workflows, printable visitor badges, a welcome monitor, notifications, and role-based access control.
+It is based on [VisitorPortal](https://github.com/P0etInc0de/VisitorPortal) by Jonathan Läpple and the VisitorPortal contributors, and remains licensed under the GNU General Public License v3.0 or later. Upstream's visit registration, reception workflows, printable badges, welcome monitor, notifications and role-based access control are all still here; see [docs/fork/](docs/fork/) for what Edu Visitor Portal adds and [docs/fork/upstream-patches.md](docs/fork/upstream-patches.md) for every change to upstream files.
 
 ## Project Status
 
-VisitorPortal is a production-oriented visitor management system first developed as part of a student team project. Its implemented core workflows are functional and can support real-world visitor management scenarios, including visit registration, reception check-in, visitor badges, email notifications, role-based access control, and welcome monitor displays.
+Upstream VisitorPortal is a production-oriented visitor management system first developed as part of a student team project. Its implemented core workflows are functional and can support real-world visitor management scenarios, including visit registration, reception check-in, visitor badges, email notifications, role-based access control, and welcome monitor displays.
 
 Although the implemented workflows are designed to be usable in practice, the project should not be deployed in a real organization without an additional security, privacy, and operational review.
 The application processes potentially personal data such as visitor names, companies, contact details, visit times, and check-in/check-out timestamps. Before using it in a real organization, review legal requirements, retention policies, access control, logging, backups, and deployment security.
@@ -37,7 +37,7 @@ The application processes potentially personal data such as visitor names, compa
 
 ## Organization and Site Model
 
-VisitorPortal is designed for one organization per instance.
+Edu Visitor Portal, like upstream, is designed for one organization per instance.
 Multiple sites/locations within one organization are supported.
 For legally separate organizations, run separate instances unless full multi-tenancy is explicitly implemented and audited.
 
@@ -291,7 +291,8 @@ Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before
 
 ## License
 
-Copyright (C) 2026 Jonathan Läpple and VisitorPortal contributors.
+Copyright (C) 2026 Jonathan Läpple and VisitorPortal contributors (upstream VisitorPortal).
+Copyright (C) 2026 Simon Grant (Edu Visitor Portal additions and changes).
 
 This project is licensed under the GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
 

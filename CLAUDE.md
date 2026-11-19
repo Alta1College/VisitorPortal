@@ -4,8 +4,8 @@ Guidance for Claude Code in this repository.
 
 ## What this project is
 
-An open-source, self-hosted visitor management platform for schools and other multi-site
-organisations. It is a **fork and extension** of
+**Edu Visitor Portal**: an open-source, self-hosted visitor management platform for schools and
+other multi-site organisations. It is a **fork and extension** of
 [P0etInc0de/VisitorPortal](https://github.com/P0etInc0de/VisitorPortal) (GPL-3.0-or-later),
 **not a rewrite**. Alta1 is the first deployment, not the organisation the product is built around.
 
@@ -38,9 +38,15 @@ Read before starting work:
    exist or replaceability is required (host directory: local/Entra; notifications: email/later
    Teams; printing: browser/later print agent).
 8. **Licensing.** Keep upstream SPDX headers and attribution. New files get
-   `SPDX-License-Identifier: GPL-3.0-or-later`. Do not copy code from other projects unless their
-   licence is confirmed compatible.
+   `SPDX-FileCopyrightText: 2026 Simon Grant` and `SPDX-License-Identifier: GPL-3.0-or-later`.
+   When editing an upstream file, keep its copyright line and add
+   `SPDX-FileCopyrightText: 2026 Simon Grant` beneath it; do the same for a file adapted from
+   upstream code. Do not copy code from other projects unless their licence is confirmed
+   compatible.
 9. **Never commit secrets, `.env` files, real visitor data or internal hostnames/IPs.**
+10. **Naming.** The product's display name is "Edu Visitor Portal". Upstream's internal names
+   (`App\Support\VisitorPortalPermissions`, `visitorportal:` commands, `besucherportal` containers,
+   config keys) stay as they are while the project tracks upstream.
 
 ## Where new code goes
 

@@ -2,7 +2,9 @@
 <img width="5197" height="2598" alt="VisitorPortalBannerDE" src="docs/assets/hero/VisitorPortalBannerDE.png" />
 </p>
 
-# VisitorPortal
+# Edu Visitor Portal
+
+Edu Visitor Portal basiert auf [VisitorPortal](https://github.com/P0etInc0de/VisitorPortal) von Jonathan Läpple und den VisitorPortal-Mitwirkenden (GPL-3.0-or-later). Die folgende Beschreibung stammt aus dem Upstream-Projekt; die englische [README](README.md) beschreibt die Erweiterungen.
 
 [English](README.md)
 
@@ -289,7 +291,8 @@ Beiträge sind willkommen. Bitte [CONTRIBUTING.md](CONTRIBUTING.md) lesen, bevor
 
 ## Lizenz
 
-Copyright (C) 2026 Jonathan Läpple and VisitorPortal contributors.
+Copyright (C) 2026 Jonathan Läpple and VisitorPortal contributors (Upstream VisitorPortal).
+Copyright (C) 2026 Simon Grant (Erweiterungen und Änderungen in Edu Visitor Portal).
 
 VisitorPortal ist unter der GNU General Public License v3.0 oder später lizenziert. Siehe [LICENSE](LICENSE).
 
